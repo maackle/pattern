@@ -107,7 +107,7 @@ def decamel(s, separator="_"):
         decamel("getHTTPResponse2) => "get_http_response2"
     """
     return re.sub(r"((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))", separator + "\\1", s).lower()
-    
+
 def pprint(string, token=[WORD, POS, CHUNK, PNP], column=4):
     """ Pretty-prints the output of Parser.parse() as a table with outlined columns.
         Alternatively, you can supply a tree.Text or tree.Sentence object.
@@ -307,7 +307,7 @@ def _read(path, encoding="utf-8", comment=";;;"):
     if path:
         if isinstance(path, str) and os.path.exists(path):
             # From file path.
-            f = open(path, "rb")
+            f = open(path, "r")
         elif isinstance(path, str):
             # From string.
             f = path.splitlines()
@@ -315,7 +315,6 @@ def _read(path, encoding="utf-8", comment=";;;"):
             # From file or buffer.
             f = path
         for i, line in enumerate(f):
-            line = line.strip(codecs.BOM_UTF8) if i == 0 and isinstance(line, str) else line
             line = line.strip()
             line = decode_utf8(line, encoding)
             if not line or (comment and line.startswith(comment)):
@@ -341,7 +340,7 @@ class Lexicon(lazydict):
 #--- FREQUENCY -------------------------------------------------------------------------------------
 
 class Frequency(lazydict):
-    
+
     def __init__(self, path=""):
         """ A dictionary of words and their relative document frequency.
         """
@@ -360,16 +359,16 @@ class Frequency(lazydict):
 #--- LANGUAGE MODEL --------------------------------------------------------------------------------
 # A language model determines the statistically most probable tag for an unknown word.
 # A pattern.vector Classifier such as SLP can be used to produce a language model,
-# by generalizing patterns from a treebank (i.e., a corpus of hand-tagged texts). 
+# by generalizing patterns from a treebank (i.e., a corpus of hand-tagged texts).
 # For example:
-# "generalizing/VBG from/IN patterns/NNS" and 
+# "generalizing/VBG from/IN patterns/NNS" and
 # "dancing/VBG with/IN squirrels/NNS"
 # both have a pattern -ing/VBG + [?] + NNS => IN.
 # Unknown words preceded by -ing and followed by a plural noun will be tagged IN (preposition),
 # unless (put simply) a majority of other patterns learned by the classifier disagrees.
 
 class Model(object):
-    
+
     def __init__(self, path="", classifier=None, known=set(), unknown=set()):
         """ A language model using a classifier (e.g., SLP, SVM) trained on morphology and context.
         """
@@ -424,7 +423,7 @@ class Model(object):
         """ Returns a training vector for the given (word, tag)-tuple and its context.
         """
         def f(v, s1, s2):
-            if s2: 
+            if s2:
                 v[s1 + " " + s2] = 1
         p, n = previous, next
         p = ("", "") if not p else (p[0] or "", p[1] or "")
@@ -440,12 +439,12 @@ class Model(object):
         f(v, "-+", p[1] + n[1]) # Tag left + right.
         f(v, "+t", n[1])        # Tag right.
         return v
-        
+
     def _get_description(self):
         return self._classifier.description
     def _set_description(self, s):
         self._classifier.description = s
-    
+
     description = property(_get_description, _set_description)
 
 #--- MORPHOLOGICAL RULES ---------------------------------------------------------------------------
@@ -481,7 +480,7 @@ class Morphology(lazylist):
     def load(self):
         # ["NN", "s", "fhassuf", "1", "NNS", "x"]
         list.extend(self, (x.split() for x in _read(self._path)))
-        
+
     def apply(self, token, previous=(None, None), next=(None, None)):
         """ Applies lexical rules to the given token, which is a [word, tag] list.
         """
@@ -746,13 +745,13 @@ PTB = PENN = "penn"
 
 class Parser(object):
 
-    def __init__(self, lexicon={}, frequency={}, model=None, morphology=None, context=None, entities=None, default=("NN", "NNP", "CD"), language=None):        
+    def __init__(self, lexicon={}, frequency={}, model=None, morphology=None, context=None, entities=None, default=("NN", "NNP", "CD"), language=None):
         """ A simple shallow parser using a Brill-based part-of-speech tagger.
             The given lexicon is a dictionary of known words and their part-of-speech tag.
             The given default tags are used for unknown words.
             Unknown words that start with a capital letter are tagged NNP (except for German).
             Unknown words that contain only digits and punctuation are tagged CD.
-            Optionally, morphological and contextual rules (or a language model) can be used 
+            Optionally, morphological and contextual rules (or a language model) can be used
             to improve the tags of unknown words.
             The given language can be used to discern between
             Germanic and Romance languages for phrase chunking.
@@ -784,11 +783,11 @@ class Parser(object):
             self.entities = Entities(path=entities, tag=default[1])
         if f(model):
             # Word part-of-speech classifier.
-            try: 
+            try:
                 self.model = Model(path=model)
             except ImportError: # pattern.vector
                 pass
-    
+
     def find_keywords(self, string, **kwargs):
         """ Returns a sorted list of keywords in the given string.
         """
@@ -797,7 +796,7 @@ class Parser(object):
                         top = kwargs.pop("top", 10),
                   frequency = kwargs.pop("frequency", {}), **kwargs
         )
-    
+
     def find_tokens(self, string, **kwargs):
         """ Returns a list of sentences from the given string.
             Punctuation marks are separated from each word by a space.
@@ -1016,9 +1015,9 @@ punctuation = ".,;:!?()[]{}`''\"@#$^&*+-|=~_"
 # Common abbreviations.
 ABBREVIATIONS = \
 abbreviations = set((
-    "a.", "adj.", "adv.", "al.", "a.m.", "art.", "c.", "capt.", "cert.", "cf.", "col.", "Col.", 
-    "comp.", "conf.", "def.", "Dep.", "Dept.", "Dr.", "dr.", "ed.", "e.g.", "esp.", "etc.", "ex.", 
-    "f.", "fig.", "gen.", "id.", "i.e.", "int.", "l.", "m.", "Med.", "Mil.", "Mr.", "n.", "n.q.", 
+    "a.", "adj.", "adv.", "al.", "a.m.", "art.", "c.", "capt.", "cert.", "cf.", "col.", "Col.",
+    "comp.", "conf.", "def.", "Dep.", "Dept.", "Dr.", "dr.", "ed.", "e.g.", "esp.", "etc.", "ex.",
+    "f.", "fig.", "gen.", "id.", "i.e.", "int.", "l.", "m.", "Med.", "Mil.", "Mr.", "n.", "n.q.",
     "orig.", "pl.", "pred.", "pres.", "p.m.", "ref.", "v.", "vs.", "w/"
 ))
 
@@ -1068,7 +1067,7 @@ emoji = { # (facial expression, sentiment)-keys
     ("gasp" , -0.05): set(("😳", "😮", "😯", "😧", "😦", "🙀")),
     ("worry", -0.25): set(("😕", "😬")),
     ("frown", -0.75): set(("😟", "😒", "😔", "😞", "😠", "😩", "😫", "😡", "👿")),
-    ("cry"  , -1.00): set(("😢", "😥", "😓", "😪", "😭", "😿")), 
+    ("cry"  , -1.00): set(("😢", "😥", "😓", "😪", "😭", "😿")),
 }
 
 RE_EMOJI = [e for v in list(EMOJI.values()) for e in v]
@@ -1080,7 +1079,7 @@ RE_MENTION = re.compile(r"\@([0-9a-zA-z_]+)(\s|\,|\:|\.|\!|\?|$)")
 # Sarcasm marker: "(!)".
 RE_SARCASM = re.compile(r"\( ?\! ?\)")
 
-# Paragraph line breaks 
+# Paragraph line breaks
 # (\n\n marks end of sentence).
 EOS = "END-OF-SENTENCE"
 
@@ -1141,7 +1140,7 @@ def find_tokens(string, punctuation=PUNCTUATION, abbreviations=ABBREVIATIONS, re
     if isinstance(string, str):
         quotes = ("'", "\"", "”", "’")
     else:
-        quotes = ("'", "\"")    
+        quotes = ("'", "\"")
     # Handle sentence breaks (periods, quotes, parenthesis).
     sentences, i, j = [[]], 0, 0
     while j < len(tokens):
@@ -1284,7 +1283,7 @@ for i in (0, 1):
         s = re.compile(s)
         CHUNKS[i][j] = (tag, s)
 
-# Handle ADJP before VP, 
+# Handle ADJP before VP,
 # so that RB prefers next ADJP over previous VP.
 CHUNKS[0].insert(1, CHUNKS[0].pop(3))
 CHUNKS[1].insert(1, CHUNKS[1].pop(3))
@@ -1422,7 +1421,7 @@ def find_keywords(string, parser, top=10, frequency={}, ignore=("rt",), pos=("NN
     """ Returns a sorted list of keywords in the given string.
         The given parser (e.g., pattern.en.parser) is used to identify noun phrases.
         The given frequency dictionary can be a reference corpus,
-        with relative document frequency (df, 0.0-1.0) for each lemma, 
+        with relative document frequency (df, 0.0-1.0) for each lemma,
         e.g., {"the": 0.8, "cat": 0.1, ...}
     """
     lemmata = kwargs.pop("lemmata", kwargs.pop("stem", True))
@@ -2247,11 +2246,11 @@ class Sentiment(lazydict):
         w[pos] = w[None] = (polarity, subjectivity, intensity)
         if label:
             self.labeler[word] = label
-            
+
     def save(self, path):
         """ Saves the lexicon as an XML-file.
         """
-        # WordNet id's, word sense descriptions and confidence scores 
+        # WordNet id's, word sense descriptions and confidence scores
         # from a bundled XML (e.g., en/lexicon-en.xml) are not saved.
         a = []
         a.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
@@ -2261,10 +2260,10 @@ class Sentiment(lazydict):
                 pos = pos or ""
                 if pos or len(self[w]) == 1:
                     a.append("\t<word %s %s %s %s %s %s />" % (
-                              "form=\"%s\""   % w, 
-                               "pos=\"%s\""   % pos, 
-                          "polarity=\"%.2f\"" % p, 
-                      "subjectivity=\"%.2f\"" % s, 
+                              "form=\"%s\""   % w,
+                               "pos=\"%s\""   % pos,
+                          "polarity=\"%.2f\"" % p,
+                      "subjectivity=\"%.2f\"" % s,
                          "intensity=\"%.2f\"" % i,
                              "label=\"%s\""   % self.labeler.get(w, "")
                     ))
@@ -2389,7 +2388,7 @@ def language(s):
         lexicon = _module(xx).__dict__["lexicon"]
         p[xx] = sum(1 for w in s if w in lexicon) / n
     return max(list(p.items()), key=lambda kv: (kv[1], int(kv[0] == "en")))
-    
+
 lang = language
 
 def tokenize(*args, **kwargs):
