@@ -68,7 +68,7 @@ class TestInflection(unittest.TestCase):
         # Note: the accuracy is higher (95%) when measured on CELEX word forms
         # (probably because en.verbs has high percentage irregular verbs).
         i, n = 0, 0
-        for v1, v2 in en.inflect.verbs.inflections.items():
+        for v1, v2 in list(en.inflect.verbs.inflections.items()):
             if en.inflect.verbs.find_lemma(v1) == v2:
                 i += 1
             n += 1
@@ -78,7 +78,7 @@ class TestInflection(unittest.TestCase):
     def test_find_lexeme(self):
         # Assert the accuracy of the verb conjugation algorithm.
         i, n = 0, 0
-        for v, lexeme1 in en.inflect.verbs.infinitives.items():
+        for v, lexeme1 in list(en.inflect.verbs.infinitives.items()):
             lexeme2 = en.inflect.verbs.find_lexeme(v)
             for j in range(len(lexeme2)):
                 if lexeme1[j] == lexeme2[j] or \
@@ -517,15 +517,15 @@ class TestParser(unittest.TestCase):
             "mice/NNS/B-NP/O/mouse ././O/O/."
         )
         # 4) Assert unicode.
-        self.assertTrue(isinstance(v, unicode))
+        self.assertTrue(isinstance(v, str))
         # 5) Assert unicode for faulty input (bytestring with unicode characters).
-        self.assertTrue(isinstance(en.parse("ø ü"), unicode))
-        self.assertTrue(isinstance(en.parse("ø ü", tokenize=True,  tags=False, chunks=False), unicode))
-        self.assertTrue(isinstance(en.parse("ø ü", tokenize=False, tags=False, chunks=False), unicode))
-        self.assertTrue(isinstance(en.parse("o u", encoding="ascii"), unicode))
+        self.assertTrue(isinstance(en.parse("ø ü"), str))
+        self.assertTrue(isinstance(en.parse("ø ü", tokenize=True,  tags=False, chunks=False), str))
+        self.assertTrue(isinstance(en.parse("ø ü", tokenize=False, tags=False, chunks=False), str))
+        self.assertTrue(isinstance(en.parse("o u", encoding="ascii"), str))
         # 6) Assert optional parameters (i.e., setting all to False).
-        self.assertEqual(en.parse("ø ü.", tokenize=True,  tags=False, chunks=False), u"ø ü .")
-        self.assertEqual(en.parse("ø ü.", tokenize=False, tags=False, chunks=False), u"ø ü.")
+        self.assertEqual(en.parse("ø ü.", tokenize=True,  tags=False, chunks=False), "ø ü .")
+        self.assertEqual(en.parse("ø ü.", tokenize=False, tags=False, chunks=False), "ø ü.")
         # 7) Assert the accuracy of the English tagger.
         i, n = 0, 0
         for corpus, a in (("tagged-en-wsj.txt", (0.968, 0.945)), ("tagged-en-oanc.txt", (0.929, 0.932))):
@@ -636,8 +636,8 @@ class TestParseTree(unittest.TestCase):
         self.assertTrue(v.objects  == [self.text[0].chunks[2]])
         self.assertTrue(v.nouns    == [self.text[0].words[3], self.text[0].words[6]])
         # Sentence.string must be unicode.
-        self.assertTrue(isinstance(v.string, unicode) == True)
-        self.assertTrue(isinstance(unicode(v), unicode) == True)
+        self.assertTrue(isinstance(v.string, str) == True)
+        self.assertTrue(isinstance(str(v), str) == True)
         self.assertTrue(isinstance(str(v), str) == True)
         print("pattern.en.Sentence")
 
@@ -686,7 +686,7 @@ class TestParseTree(unittest.TestCase):
         # Assert chunk traversal.
         self.assertEqual(v.nearest("VP"), self.text[0].chunks[1])
         self.assertEqual(v.previous(), self.text[0].chunks[1])
-        self.assertEqual(v.next(), self.text[0].chunks[3])
+        self.assertEqual(next(v), self.text[0].chunks[3])
         print("pattern.en.Chunk")
 
     def test_chunk_conjunctions(self):
@@ -989,7 +989,7 @@ class TestSentiment(unittest.TestCase):
             from pattern.text.en.wordnet import SentiWordNet
             lexicon = SentiWordNet()
             lexicon.load()
-        except ImportError, e:
+        except ImportError as e:
             # SentiWordNet data file is not installed in default location, stop test.
             print(e)
             return
@@ -1006,12 +1006,12 @@ class TestWordNet(unittest.TestCase):
 
     def test_normalize(self):
         # Assert normalization of simple diacritics (WordNet does not store diacritics).
-        self.assertEqual(en.wordnet.normalize(u"cliché"), "cliche")
-        self.assertEqual(en.wordnet.normalize(u"façade"), "facade")
+        self.assertEqual(en.wordnet.normalize("cliché"), "cliche")
+        self.assertEqual(en.wordnet.normalize("façade"), "facade")
         print("pattern.en.wordnet.normalize()")
 
     def test_version(self):
-        print("WordNet " + en.wordnet.VERSION)
+        print(("WordNet " + en.wordnet.VERSION))
 
     def test_synsets(self):
         # Assert synsets by part-of-speech.

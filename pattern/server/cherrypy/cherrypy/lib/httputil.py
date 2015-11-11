@@ -9,7 +9,7 @@ to a public caning.
 
 from binascii import b2a_base64
 from cherrypy._cpcompat import BaseHTTPRequestHandler, HTTPDate, ntob, ntou, reversed, sorted
-from cherrypy._cpcompat import basestring, bytestr, iteritems, nativestr, unicodestr, unquote_qs
+from cherrypy._cpcompat import str, bytestr, iteritems, nativestr, unicodestr, unquote_qs
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From http://www.cherrypy.org/ticket/361
@@ -22,7 +22,7 @@ response_codes[503] = ('Service Unavailable',
                       'maintenance of the server.')
 
 import re
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 
 
@@ -375,7 +375,7 @@ class CaseInsensitiveDict(dict):
             return dict.has_key(self, str(key).title())
 
     def update(self, E):
-        for k in E.keys():
+        for k in list(E.keys()):
             self[str(k).title()] = E[k]
 
     def fromkeys(cls, seq, value=None):
@@ -403,11 +403,11 @@ class CaseInsensitiveDict(dict):
 # field continuation. It is expected that the folding LWS will be
 # replaced with a single SP before interpretation of the TEXT value."
 if nativestr == bytestr:
-    header_translate_table = ''.join([chr(i) for i in xrange(256)])
-    header_translate_deletechars = ''.join([chr(i) for i in xrange(32)]) + chr(127)
+    header_translate_table = ''.join([chr(i) for i in range(256)])
+    header_translate_deletechars = ''.join([chr(i) for i in range(32)]) + chr(127)
 else:
     header_translate_table = None
-    header_translate_deletechars = bytes(range(32)) + bytes([127])
+    header_translate_deletechars = bytes(list(range(32))) + bytes([127])
 
 
 class HeaderMap(CaseInsensitiveDict):
@@ -441,7 +441,7 @@ class HeaderMap(CaseInsensitiveDict):
 
     def output(self):
         """Transform self into a list of (name, value) tuples."""
-        return list(self.encode_header_items(self.items()))
+        return list(self.encode_header_items(list(self.items())))
 
     def encode_header_items(cls, header_items):
         """
@@ -452,7 +452,7 @@ class HeaderMap(CaseInsensitiveDict):
             if isinstance(k, unicodestr):
                 k = cls.encode(k)
 
-            if not isinstance(v, basestring):
+            if not isinstance(v, str):
                 v = str(v)
 
             if isinstance(v, unicodestr):

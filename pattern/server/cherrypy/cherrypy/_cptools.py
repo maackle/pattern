@@ -38,8 +38,8 @@ def _getargs(func):
         co = func.__code__
     else:
         if isinstance(func, types.MethodType):
-            func = func.im_func
-        co = func.func_code
+            func = func.__func__
+        co = func.__code__
     return co.co_varnames[:co.co_argcount]
 
 
@@ -122,7 +122,7 @@ class Tool(object):
                 f._cp_config = {}
             subspace = self.namespace + "." + self._name + "."
             f._cp_config[subspace + "on"] = True
-            for k, v in kwargs.items():
+            for k, v in list(kwargs.items()):
                 f._cp_config[subspace + k] = v
             return f
         return tool_decorator
@@ -308,7 +308,7 @@ class SessionTool(Tool):
         sess.regenerate()
 
         # Grab cookie-relevant tool args
-        conf = dict([(k, v) for k, v in self._merged_args().items()
+        conf = dict([(k, v) for k, v in list(self._merged_args().items())
                      if k in ('path', 'path_header', 'name', 'timeout',
                               'domain', 'secure')])
         _sessions.set_response_cookie(**conf)
@@ -441,7 +441,7 @@ class Toolbox(object):
         """Run tool._setup() for each tool in our toolmap."""
         map = cherrypy.serving.request.toolmaps.get(self.namespace)
         if map:
-            for name, settings in map.items():
+            for name, settings in list(map.items()):
                 if settings.get("on", False):
                     tool = getattr(self, name)
                     tool._setup()

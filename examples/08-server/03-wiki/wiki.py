@@ -89,7 +89,7 @@ def displayname(page):
 # We load the $name using the name() function above.
 
 def view(page):
-    print displayname(page)
+    print(displayname(page))
     return template(wiki, name=name(page), content=open(page).read())
 
 # The edit() function is called when a URL ends in "?edit",

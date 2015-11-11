@@ -21,9 +21,9 @@ class TestCache(unittest.TestCase):
     
     def test_cache(self):
         # Assert cache unicode.
-        k, v = "test", u"ünîcødé"
+        k, v = "test", "ünîcødé"
         web.cache[k] = v
-        self.assertTrue(isinstance(web.cache[k], unicode))
+        self.assertTrue(isinstance(web.cache[k], str))
         self.assertEqual(web.cache[k], v)
         self.assertEqual(web.cache.age(k), 0)
         del web.cache[k]
@@ -36,18 +36,18 @@ class TestUnicode(unittest.TestCase):
     def setUp(self):
         # Test data with different (or wrong) encodings.
         self.strings = (
-            u"ünîcøde",
-            u"ünîcøde".encode("utf-16"),
-            u"ünîcøde".encode("latin-1"),
-            u"ünîcøde".encode("windows-1252"),
+            "ünîcøde",
+            "ünîcøde".encode("utf-16"),
+            "ünîcøde".encode("latin-1"),
+            "ünîcøde".encode("windows-1252"),
              "ünîcøde",
-            u"אוניקאָד"
+            "אוניקאָד"
         )
         
     def test_decode_utf8(self):
         # Assert unicode.
         for s in self.strings:
-            self.assertTrue(isinstance(web.decode_utf8(s), unicode))
+            self.assertTrue(isinstance(web.decode_utf8(s), str))
         print("pattern.web.decode_utf8()")
 
     def test_encode_utf8(self):
@@ -58,10 +58,10 @@ class TestUnicode(unittest.TestCase):
         
     def test_fix(self):
         # Assert fix for common Unicode mistakes.
-        self.assertEqual(web.fix(u"clichÃ©"), u"cliché")
-        self.assertEqual(web.fix("clichÃ©"), u"cliché")
-        self.assertEqual(web.fix("cliché"), u"cliché")
-        self.assertEqual(web.fix("â€“"), u"–")
+        self.assertEqual(web.fix("clichÃ©"), "cliché")
+        self.assertEqual(web.fix("clichÃ©"), "cliché")
+        self.assertEqual(web.fix("cliché"), "cliché")
+        self.assertEqual(web.fix("â€“"), "–")
 
 #---------------------------------------------------------------------------------------------------
 
@@ -134,7 +134,7 @@ class TestURL(unittest.TestCase):
         self.assertEqual(v.query, {"q": 1, "page": 10, "user": None})
         self.assertEqual(v.querystring, "q=1&page=10&user=")
         # Assert URL.querystring encodes unicode arguments.
-        q = ({u"ünîcødé": 1.5}, "%C3%BCn%C3%AEc%C3%B8d%C3%A9=1.5")
+        q = ({"ünîcødé": 1.5}, "%C3%BCn%C3%AEc%C3%B8d%C3%A9=1.5")
         v.query = q[0]
         self.assertEqual(v.querystring, q[1])
         # Assert URL.query decodes unicode arguments.
@@ -193,10 +193,10 @@ class TestURL(unittest.TestCase):
         
     def test_url_download(self):
         t = time.time()
-        v = web.URL(self.live).download(cached=False, throttle=0.25, unicode=True)
+        v = web.URL(self.live).download(cached=False, throttle=0.25, str=True)
         t = time.time() - t
         # Assert unicode content.
-        self.assertTrue(isinstance(v, unicode))
+        self.assertTrue(isinstance(v, str))
         # Assert download rate limiting.
         self.assertTrue(t >= 0.25)
         print("pattern.web.URL.download()")
@@ -217,7 +217,7 @@ class TestURL(unittest.TestCase):
         # Assert URL redirected URL (this depends on where you are).
         # In Belgium, it yields "http://www.google.be/".
         v = web.URL(self.live).redirect
-        print("pattern.web.URL.redirect: " + self.live + " => " + str(v))
+        print(("pattern.web.URL.redirect: " + self.live + " => " + str(v)))
 
     def test_abs(self):
         # Assert absolute URL (special attention for anchors).
@@ -242,7 +242,7 @@ class TestURL(unittest.TestCase):
     def test_oauth(self):
         # Assert OAuth algorithm.
         data = {
-            "q": u'"cåts, døgs & chîckéns = fün+"',
+            "q": '"cåts, døgs & chîckéns = fün+"',
             "oauth_version": "1.0",
             "oauth_nonce": "0",
             "oauth_timestamp": 0,
@@ -303,7 +303,7 @@ class TestPlaintext(unittest.TestCase):
     def test_strip_tags(self):
         # Assert HTML parser and tag stripper.
         for html, plain in (
-          (u"<b>ünîcøde</b>", u"ünîcøde"),
+          ("<b>ünîcøde</b>", "ünîcøde"),
           ( "<img src=""/>",   ""),
           ( "<p>text</p>",     "text\n\n"),
           ( "<li>text</li>",   "* text\n"),
@@ -369,7 +369,7 @@ class TestPlaintext(unittest.TestCase):
           ("&#38;", "&"),
           ("&amp;", "&"),
           ("&#x0026;", "&"),
-          ("&#160;", u"\xa0"),
+          ("&#160;", "\xa0"),
           ("&foo;", "&foo;")):
             self.assertEqual(web.decode_entities(a), b)
         print("pattern.web.decode_entities()")
@@ -440,8 +440,8 @@ class TestPlaintext(unittest.TestCase):
             </html>
         """
         self.assertEqual(web.plaintext(html, keep={"a": "href"}),
-            u"tags & things\n\ntitle1\n\ntitle2\n\nparagraph1\n\nparagraph2 " + \
-            u"<a href=\"http://www.domain.com\">link</a>\n\n* item1 xxx\n* item2")
+            "tags & things\n\ntitle1\n\ntitle2\n\nparagraph1\n\nparagraph2 " + \
+            "<a href=\"http://www.domain.com\">link</a>\n\n* item1 xxx\n* item2")
         print("pattern.web.plaintext()")
 
 #---------------------------------------------------------------------------------------------------
@@ -484,12 +484,12 @@ class TestSearchEngine(unittest.TestCase):
             self.assertEqual(v.type, type)
             self.assertEqual(len(v), 1)
             self.assertTrue(isinstance(v[0], web.Result))
-            self.assertTrue(isinstance(v[0].url, unicode))
-            self.assertTrue(isinstance(v[0].title, unicode))
-            self.assertTrue(isinstance(v[0].description, unicode))
-            self.assertTrue(isinstance(v[0].language, unicode))
-            self.assertTrue(isinstance(v[0].author, (unicode, tuple)))
-            self.assertTrue(isinstance(v[0].date, unicode))
+            self.assertTrue(isinstance(v[0].url, str))
+            self.assertTrue(isinstance(v[0].title, str))
+            self.assertTrue(isinstance(v[0].description, str))
+            self.assertTrue(isinstance(v[0].language, str))
+            self.assertTrue(isinstance(v[0].author, (str, tuple)))
+            self.assertTrue(isinstance(v[0].date, str))
         else:
             self.assertTrue(isinstance(v, web.MediaWikiArticle))
         # Assert zero results for start < 1 and count < 1.
@@ -503,7 +503,7 @@ class TestSearchEngine(unittest.TestCase):
             self.assertEqual(v2, None)
         # Assert SearchEngineTypeError for unknown type.
         self.assertRaises(web.SearchEngineTypeError, e.search, query, type="crystall-ball")
-        print("pattern.web.%s.search()" % api)
+        print(("pattern.web.%s.search()" % api))
     
     def test_search_google(self):
         self._test_search_engine("Google",       *self.api["Google"])
@@ -524,7 +524,7 @@ class TestSearchEngine(unittest.TestCase):
     def test_search_productwiki(self):
         self._test_search_engine("ProductWiki",  *self.api["ProductWiki"], **{"query": "computer"})
     def test_search_newsfeed(self):
-        for feed, url in web.feeds.items():
+        for feed, url in list(web.feeds.items()):
             self._test_search_engine("Newsfeed", url, None, web.Newsfeed, query=url, type=web.NEWS)
     
     def _test_results(self, api, source, license, Engine, type=web.SEARCH, query="today", baseline=[6,6,6,0]):
@@ -552,7 +552,7 @@ class TestSearchEngine(unittest.TestCase):
         self.assertTrue(i2 >= baseline[1]) # query in url + title + description
         self.assertTrue(i3 >= baseline[2]) # language "en"
         self.assertTrue(i4 >= baseline[3]) # url's ending with "jpg", "png" or "gif"
-        print("pattern.web.%s.Result(type=%s)" % (api, type.upper()))
+        print(("pattern.web.%s.Result(type=%s)" % (api, type.upper())))
     
     def test_results_google(self):
         self._test_results("Google",   *self.api["Google"])
@@ -580,7 +580,7 @@ class TestSearchEngine(unittest.TestCase):
             # Assert Google Translate API.
             # Requires license with billing enabled.
             source, license, Engine = self.api["Google"]
-            v = Engine(license, throttle=0.25).translate(u"thé", input="fr", output="en", cached=False)
+            v = Engine(license, throttle=0.25).translate("thé", input="fr", output="en", cached=False)
             self.assertEqual(v, "tea")
             print("pattern.web.Google.translate()")
         except web.HTTP401Authentication:
@@ -591,7 +591,7 @@ class TestSearchEngine(unittest.TestCase):
             # Assert Google Translate API (language detection).
             # Requires license with billing enabled.
             source, license, Engine = self.api["Google"]
-            v = Engine(license, throttle=0.25).identify(u"L'essence des mathématiques, c'est la liberté!", cached=False)
+            v = Engine(license, throttle=0.25).identify("L'essence des mathématiques, c'est la liberté!", cached=False)
             self.assertEqual(v[0], "fr")
             print("pattern.web.Google.identify()")
         except web.HTTP401Authentication:
@@ -615,7 +615,7 @@ class TestSearchEngine(unittest.TestCase):
         for size in (web.TINY, web.SMALL, web.MEDIUM, web.LARGE):
             v = e.search("cats", type=web.IMAGE, count=1, size=size, cached=False)
             self.assertEqual(web.URL(v[0].url).exists, True)
-            print("pattern.web.%s.search(type=IMAGE, size=%s)" % (api, size.upper()))
+            print(("pattern.web.%s.search(type=IMAGE, size=%s)" % (api, size.upper())))
 
     def test_yahoo_image_size(self):
         self._test_search_image_size("Yahoo",  *self.api["Yahoo"])
@@ -628,7 +628,7 @@ class TestSearchEngine(unittest.TestCase):
         # Assert WikipediaArticle.list(), an iterator over all article titles.
         source, license, Engine = self.api["Wikipedia"]
         v = Engine(license).list(start="a", count=1)
-        v = [v.next() for i in range(2)]
+        v = [next(v) for i in range(2)]
         self.assertTrue(len(v) == 2)
         self.assertTrue(v[0].lower().startswith("a"))
         self.assertTrue(v[1].lower().startswith("a"))
@@ -638,7 +638,7 @@ class TestSearchEngine(unittest.TestCase):
         # Assert WikipediaArticle.all(), an iterator over WikipediaArticle objects.
         source, license, Engine = self.api["Wikipedia"]
         v = Engine(license).all(start="a", count=1)
-        v = [v.next() for i in range(1)]
+        v = [next(v) for i in range(1)]
         self.assertTrue(len(v) == 1)
         self.assertTrue(isinstance(v[0], web.WikipediaArticle))
         self.assertTrue(v[0].title.lower().startswith("a"))
@@ -648,8 +648,8 @@ class TestSearchEngine(unittest.TestCase):
         source, license, Engine = self.api["Wikipedia"]
         v = Engine(license).search("cat", cached=False)
         # Assert WikipediaArticle properties.
-        self.assertTrue(isinstance(v.title,      unicode))
-        self.assertTrue(isinstance(v.string,     unicode))
+        self.assertTrue(isinstance(v.title,      str))
+        self.assertTrue(isinstance(v.string,     str))
         self.assertTrue(isinstance(v.links,      list))
         self.assertTrue(isinstance(v.categories, list))
         self.assertTrue(isinstance(v.external,   list))
@@ -752,7 +752,7 @@ class TestDOM(unittest.TestCase):
         self.assertEqual(v1.source[:10], "<!doctype ") # Note: BeautifulSoup strips whitespace.
         self.assertEqual(v1.parent, None)
         # Assert Node traversal.
-        v2 = v1.children[0].next
+        v2 = v1.children[0].__next__
         self.assertEqual(v2.type, web.TEXT)
         self.assertEqual(v2.previous, v1.children[0])
         # Assert Document properties.
@@ -846,14 +846,14 @@ class TestDocumentParser(unittest.TestCase):
         # Assert PDF to string parser.
         s = web.parsedoc(os.path.join(PATH, "corpora", "carroll-wonderland.pdf"))
         self.assertTrue("Curiouser and curiouser!" in s)
-        self.assertTrue(isinstance(s, unicode))
+        self.assertTrue(isinstance(s, str))
         print("pattern.web.parsepdf()")
 
     def test_docx(self):
         # Assert PDF to string parser.
         s = web.parsedoc(os.path.join(PATH, "corpora", "carroll-lookingglass.docx"))
         self.assertTrue("'Twas brillig, and the slithy toves" in s)
-        self.assertTrue(isinstance(s, unicode))
+        self.assertTrue(isinstance(s, str))
         print("pattern.web.parsedocx()")
 
 #---------------------------------------------------------------------------------------------------
@@ -918,7 +918,7 @@ class TestLocale(unittest.TestCase):
         # It should increase as new languages and locations are added.
         i = 0
         n = len(web.locale.GEOCODE)
-        for city, (latitude, longitude, language, region) in web.locale.GEOCODE.items():
+        for city, (latitude, longitude, language, region) in list(web.locale.GEOCODE.items()):
             if web.locale.encode_region(region) is not None:
                 i += 1
         self.assertTrue(float(i) / n > 0.60)
@@ -943,7 +943,7 @@ class TestMail(unittest.TestCase):
         # Assert web.imap.Mail.
         m = web.Mail(self.username, self.password, service=self.service, port=self.port, secure=self.SSL)
         # Assert web.imap.MailFolder (assuming GMail folders).
-        print(m.folders)
+        print((m.folders))
         self.assertTrue(len(m.folders) > 0)
         self.assertTrue(len(m.inbox) > 0)
         print("pattern.web.Mail")
@@ -959,11 +959,11 @@ class TestMail(unittest.TestCase):
         e = m.inbox.read(a[0], attachments=False, cached=False)
         # Assert web.imap.Message.
         self.assertTrue(isinstance(e, web.imap.Message))
-        self.assertTrue(isinstance(e.author,        unicode))
-        self.assertTrue(isinstance(e.email_address, unicode))
-        self.assertTrue(isinstance(e.date,          unicode))
-        self.assertTrue(isinstance(e.subject,       unicode))
-        self.assertTrue(isinstance(e.body,          unicode))
+        self.assertTrue(isinstance(e.author,        str))
+        self.assertTrue(isinstance(e.email_address, str))
+        self.assertTrue(isinstance(e.date,          str))
+        self.assertTrue(isinstance(e.subject,       str))
+        self.assertTrue(isinstance(e.body,          str))
         self.assertTrue(self.query1 in e.author.lower())
         self.assertTrue("@" in e.email_address)
         print("pattern.web.Mail.search(field=FROM)")
@@ -981,7 +981,7 @@ class TestMail(unittest.TestCase):
                 if len(e.attachments) > 0:
                     self.assertTrue(isinstance(e.attachments[0][1], str))
                     self.assertTrue(len(e.attachments[0][1]) > 0)
-                    print("pattern.web.Message.attachments (MIME-type: %s)" % e.attachments[0][0])
+                    print(("pattern.web.Message.attachments (MIME-type: %s)" % e.attachments[0][0]))
         print("pattern.web.Mail.search(field=SUBJECT)")
         print("pattern.web.Mail.read()")
 
@@ -1044,9 +1044,9 @@ class TestCrawler(unittest.TestCase):
         v = web.Crawler(links=["http://www.clips.ua.ac.be/"], delay=10)
         while len(v.visited) < 4:
             v.crawl(throttle=0.1, cached=False, method=web.BREADTH)
-        self.assertTrue(v.history.keys()[0] != v.history.keys()[1])
-        self.assertTrue(v.history.keys()[0] != v.history.keys()[2])
-        self.assertTrue(v.history.keys()[1] != v.history.keys()[2])
+        self.assertTrue(list(v.history.keys())[0] != list(v.history.keys())[1])
+        self.assertTrue(list(v.history.keys())[0] != list(v.history.keys())[2])
+        self.assertTrue(list(v.history.keys())[1] != list(v.history.keys())[2])
         print("pattern.web.Crawler.crawl(method=BREADTH)")
 
 #---------------------------------------------------------------------------------------------------

@@ -38,7 +38,7 @@ class Counter(dict):
         if kwargs:
             self.update(kwargs)
         if hasattr(iterable, "items"):
-            for k, v in iterable.items(): 
+            for k, v in list(iterable.items()): 
                 self[k] = self.get(k, 0) + v
         elif hasattr(iterable, "__getitem__") \
           or hasattr(iterable, "__iter__"):
@@ -49,8 +49,8 @@ class Counter(dict):
         """ Returns a list of the n most common (element, count)-tuples.
         """
         if n is None:
-            return sorted(self.items(), key=itemgetter(1), reverse=True)
-        return nlargest(n, self.items(), key=itemgetter(1))
+            return sorted(list(self.items()), key=itemgetter(1), reverse=True)
+        return nlargest(n, list(self.items()), key=itemgetter(1))
 
     def copy(self):
         return Counter(self)
@@ -258,9 +258,9 @@ def fleiss_kappa(m):
         return 1.0
     assert all(sum(row) == n for row in m[1:]), "numer of votes for each task differs"
     # p[j] = the proportion of all assignments which were to the j-th category.
-    p = [sum(m[i][j] for i in xrange(N)) / float(N*n) for j in xrange(k)]
+    p = [sum(m[i][j] for i in range(N)) / float(N*n) for j in range(k)]
     # P[i] = the extent to which voters agree for the i-th subject.
-    P = [(sum(m[i][j]**2 for j in xrange(k)) - n) / float(n * (n-1)) for i in xrange(N)]
+    P = [(sum(m[i][j]**2 for j in range(k)) - n) / float(n * (n-1)) for i in range(N)]
     # Pm = the mean of P[i] and Pe.
     Pe = sum(pj**2 for pj in p)
     Pm = sum(P) / N
@@ -283,10 +283,10 @@ def levenshtein(string1, string2):
     if n > m: 
         # Make sure n <= m to use O(min(n,m)) space.
         string1, string2, n, m = string2, string1, m, n
-    current = list(xrange(n+1))
-    for i in xrange(1, m+1):
+    current = list(range(n+1))
+    for i in range(1, m+1):
         previous, current = current, [i]+[0]*n
-        for j in xrange(1, n+1):
+        for j in range(1, n+1):
             insert, delete, replace = previous[j]+1, current[j-1]+1, previous[j-1]
             if string1[j-1] != string2[i-1]:
                 replace += 1
@@ -305,7 +305,7 @@ def dice_coefficient(string1, string2):
         based on the number of shared bigrams, e.g., "night" and "nacht" have one common bigram "ht".
     """
     def bigrams(s):
-        return set(s[i:i+2] for i in xrange(len(s)-1))
+        return set(s[i:i+2] for i in range(len(s)-1))
     nx = bigrams(string1)
     ny = bigrams(string2)
     nt = nx.intersection(ny)
@@ -338,7 +338,7 @@ def flesch_reading_ease(string):
             n += int(v and not p)
             p = v
         return n
-    if not isinstance(string, basestring):
+    if not isinstance(string, str):
         raise TypeError("%s is not a string" % repr(string))
     if len(string) <  3:
         return 1.0
@@ -380,7 +380,7 @@ def ngrams(string, n=3, punctuation=PUNCTUATION, **kwargs):
     s = s.replace("!", " !")
     s = [w.strip(punctuation) for w in s.split()]
     s = [w.strip() for w in s if w.strip()]
-    return [tuple(s[i:i+n]) for i in xrange(len(s) - n + 1)]
+    return [tuple(s[i:i+n]) for i in range(len(s) - n + 1)]
 
 class Weight(float):
     """ A float with a magic "assessments" property,
@@ -436,7 +436,7 @@ def type_token_ratio(string, n=100, punctuation=PUNCTUATION):
     """
     def window(a, n=100):
         if n > 0:
-            for i in xrange(max(len(a) - n + 1, 1)):
+            for i in range(max(len(a) - n + 1, 1)):
                 yield a[i:i+n]
     s = string.lower().split()
     s = [w.strip(punctuation) for w in s]
@@ -470,7 +470,7 @@ def suffixes(inflections=[], n=3, top=10, reverse=True):
     # Sort by frequency of inflected suffix: 2x -nes, 1x -aux.
     # Sort by frequency of base suffixes for each inflection:
     # [(2, "nes", [("ne", 0.5), ("n", 0.5)]), (1, "aux", [("au", 1.0)])]
-    d = [(int(sum(y.values())), x, y.items()) for x, y in d.items()]
+    d = [(int(sum(y.values())), x, list(y.items())) for x, y in list(d.items())]
     d = sorted(d, reverse=True)
     d = ((n, x, (sorted(y, key=itemgetter(1)))) for n, x, y in d)
     d = ((n, x, [(y, m / n) for y, m in y]) for n, x, y in d)
@@ -507,7 +507,7 @@ def cooccurrence(iterable, window=(-1,-1), term1=lambda x: True, term2=lambda x:
     if not isinstance(matrix, dict):
         matrix = {}
     # Memory-efficient iteration:
-    if isinstance(iterable, basestring):
+    if isinstance(iterable, str):
         iterable = isplit(iterable)
     if isinstance(iterable, (list, tuple)) and all(hasattr(f, "read") for f in iterable):
         iterable = chain(*(isplit(chain(*x)) for x in iterable))
@@ -685,7 +685,7 @@ def simple_moving_average(iterable, k=10):
     """ Returns an iterator over the simple moving average of the given list of values.
     """
     a = iterable if isinstance(iterable, list) else list(iterable)
-    for m in xrange(len(a)):
+    for m in range(len(a)):
         i = m - k
         j = m + k + 1
         w = a[max(0,i):j]
@@ -705,7 +705,7 @@ def histogram(iterable, k=10, range=None):
     r = range or (min(a), max(a))
     k = max(int(k), 1)
     w = float(r[1] - r[0] + 0.000001) / k # interval (bin width)
-    h = [[] for i in xrange(k)]
+    h = [[] for i in range(k)]
     for x in a:
         i = int(floor((x - r[0]) / w))
         if 0 <= i < len(h): 
@@ -823,7 +823,7 @@ def fisher_exact_test(a, b, c, d, **kwargs):
             k = n - k
         if 0 <= k <= n and (n, k) not in _cache:
             c = 1.0
-            for i in xrange(1, int(k + 1)):
+            for i in range(1, int(k + 1)):
                 c *= n - k + i
                 c /= i
             _cache[(n, k)] = c # 3x speedup.
@@ -833,8 +833,8 @@ def fisher_exact_test(a, b, c, d, **kwargs):
     # Probabilities of "more extreme" data, in both directions (two-tailed).
     # Based on: http://www.koders.com/java/fid868948AD5196B75C4C39FEA15A0D6EAF34920B55.aspx?s=252
     s = [cutoff] + \
-        [p(a+i, b-i, c-i, d+i) for i in xrange(1, min(int(b), int(c)) + 1)] + \
-        [p(a-i, b+i, c+i, d-i) for i in xrange(1, min(int(a), int(d)) + 1)]
+        [p(a+i, b-i, c-i, d+i) for i in range(1, min(int(b), int(c)) + 1)] + \
+        [p(a-i, b+i, c+i, d-i) for i in range(1, min(int(a), int(d)) + 1)]
     return sum(v for v in s if v <= cutoff) or 0.0
     
 fisher = fisher_test = fisher_exact_test
@@ -853,11 +853,11 @@ def _expected(observed):
         return []
     if len(o) == 1:
         return [[sum(o[0]) / float(len(o[0]))] * len(o[0])]
-    n = [sum(o[i]) for i in xrange(len(o))]
-    m = [sum(o[i][j] for i in xrange(len(o))) for j in xrange(len(o[0]))]
+    n = [sum(o[i]) for i in range(len(o))]
+    m = [sum(o[i][j] for i in range(len(o))) for j in range(len(o[0]))]
     s = float(sum(n))
     # Each cell = row sum * column sum / total.
-    return [[n[i] * m[j] / s for j in xrange(len(o[i]))] for i in xrange(len(o))]
+    return [[n[i] * m[j] / s for j in range(len(o[i]))] for i in range(len(o))]
 
 def pearson_chi_squared_test(observed=[], expected=[], df=None, tail=UPPER):
     """ Returns (x2, p) for the n x m observed and expected data (containing absolute frequencies).
@@ -883,8 +883,8 @@ def pearson_chi_squared_test(observed=[], expected=[], df=None, tail=UPPER):
     df = df or (n-1) * (m-1)
     df = df or (m == 1 and n-1 or m-1)
     x2 = 0.0
-    for i in xrange(n):
-        for j in xrange(m):
+    for i in range(n):
+        for j in range(m):
             if o[i][j] != 0 and e[i][j] != 0:
                 x2 += (o[i][j] - e[i][j]) ** 2.0 / e[i][j]  
     p = gammai(df * 0.5, x2 * 0.5, tail)
@@ -917,8 +917,8 @@ def pearson_log_likelihood_ratio(observed=[], expected=[], df=None, tail=UPPER):
     df = df or (n-1) * (m-1)
     df = df or (m == 1 and n-1 or m-1)
     g  = 0.0
-    for i in xrange(n):
-        for j in xrange(m):
+    for i in range(n):
+        for j in range(m):
             if o[i][j] != 0 and e[i][j] != 0:
                 g += o[i][j] * log(o[i][j] / e[i][j])
     g = g * 2
@@ -980,7 +980,7 @@ def gammaln(x):
     y = x + 5.5
     y = (x + 0.5) * log(y) - y
     n = 1.0
-    for i in xrange(6):
+    for i in range(6):
         x += 1
         n += (
           76.18009173, 
@@ -1002,7 +1002,7 @@ def gammai(a, x, tail=UPPER):
         ln = gammaln(a)
         s = 1.0 / a
         d = 1.0 / a
-        for i in xrange(1, iterations):
+        for i in range(1, iterations):
             d = d * x / (a + i)
             s = s + d
             if abs(d) < abs(s) * epsilon:
@@ -1018,7 +1018,7 @@ def gammai(a, x, tail=UPPER):
         a1 = x
         b1 = 1.0
         f  = 1.0
-        for i in xrange(1, iterations):
+        for i in range(1, iterations):
             a0 = (a1 + a0 * (i - a)) * f
             b0 = (b1 + b0 * (i - a)) * f
             a1 = x * a0 + a1 * i * f
@@ -1094,7 +1094,7 @@ normpdf = pdf
 def norm(n, mean=0.0, stdev=1.0):
     """ Returns a list of n random samples from the normal distribution.
     """
-    return [gauss(mean, stdev) for i in xrange(n)]
+    return [gauss(mean, stdev) for i in range(n)]
 
 #--- KOLMOGOROV DISTRIBUTION -----------------------------------------------------------------------
 # Based on: http://www.math.ucla.edu/~tom/distributions/Kolmogorov.html, Thomas Ferguson
@@ -1110,6 +1110,6 @@ def kolmogorov(x):
         return 0.0
     x = -2.0 * x * x
     k = 0
-    for i in reversed(xrange(1, 27+1, 2)): # 27 25 23 ... 1
+    for i in reversed(range(1, 27+1, 2)): # 27 25 23 ... 1
         k = (1 - k) * exp(x * i)
     return 2.0 * k

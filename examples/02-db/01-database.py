@@ -46,8 +46,8 @@ if not "customers" in db:
         field("address", STRING(200))
     )
     db.create("customers", schema)
-    db.customers.append(name=u"Schrödinger") # Unicode is supported.
-    db.customers.append(name=u"Hofstadter")
+    db.customers.append(name="Schrödinger") # Unicode is supported.
+    db.customers.append(name="Hofstadter")
 
 # ORDERS
 # Create the orders table if it doesn't exist yet and add data.
@@ -63,9 +63,9 @@ if not "orders" in db:
 
 # Show all the products in the database.
 # The assoc() iterator yields each row as a dictionary.
-print "There are", len(db.products), "products available:"
+print("There are", len(db.products), "products available:")
 for row in assoc(db.products):
-    print row
+    print(row)
 
 # Note how the orders table only contains integer id's.
 # This is much more efficient than storing entire strings (e.g., customer address).
@@ -81,16 +81,16 @@ q = db.orders.search(
         rel("product_id", "products.id", "products"),
         rel("customer_id", "customers.id", "customers")
     ))
-print
-print "Invoices:"
+print()
+print("Invoices:")
 for row in assoc(q):
-    print row # (product description, product price, customer name, date created)
-print
-print "Invoice query SQL syntax:"
-print q
-print
-print "Invoice query XML:"
-print q.xml
+    print(row) # (product description, product price, customer name, date created)
+print()
+print("Invoice query SQL syntax:")
+print(q)
+print()
+print("Invoice query XML:")
+print(q.xml)
 
 # The XML can be passed to Database.create() to create a new table (with data).
 # This is explained in the online documentation.

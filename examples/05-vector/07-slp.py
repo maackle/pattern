@@ -17,7 +17,7 @@ from random         import seed
 # Typically, Penn Treebank is used, which contains texts from the Wall Street Journal (WSJ).
 # In this example we will use the freely available Open American National Corpus (OANC).
 
-print "load training data..."
+print("load training data...")
 
 def corpus(path, encoding="utf-8"):
     """ Yields sentences of (word, tag)-tuples from the given corpus,
@@ -25,8 +25,8 @@ def corpus(path, encoding="utf-8"):
         with slash-encoded tokens (e.g., the/DT cat/NN).
     """
     for s in open(path, encoding=encoding):
-        s = map(lambda w:  w.split("/"), s.strip().split(" "))
-        s = map(lambda w: (w[0].replace("&slash;", "/"), w[1]), s)
+        s = [w.split("/") for w in s.strip().split(" ")]
+        s = [(w[0].replace("&slash;", "/"), w[1]) for w in s]
         yield s
 
 # The corpus is included in the Pattern download zip, in pattern/test/corpora:
@@ -49,7 +49,7 @@ data = list(corpus(path))
 # We will add "about" to the set of words in the lexicon to ignore
 # when using a language model. 
 
-print "load training lexicon..."
+print("load training lexicon...")
 
 f = defaultdict(lambda: defaultdict(int)) # {word1: {tag1: count, tag2: count, ...}}
 for s in data:
@@ -57,7 +57,7 @@ for s in data:
         f[w][tag] += 1
 
 known, unknown = set(), set()
-for w, tags in f.items():
+for w, tags in list(f.items()):
     n = sum(tags.values()) # total count
     m = sorted(tags, key=tags.__getitem__, reverse=True)[0] # most frequent tag
     if float(tags[m]) / n >= 0.97 and n > 1:
@@ -89,7 +89,7 @@ for w, tags in f.items():
 # If you want it to run faster for experimentation,
 # use less iterations or less data in the code below:
 
-print "training model..."
+print("training model...")
 
 seed(0) # Lock random list shuffling so we can compare.
 
@@ -117,7 +117,7 @@ m.save(f, final=True)
 # For English, this can raise accuracy from about 94% up to about 97%,
 # and makes the parses about 3x faster.
 
-print "loading model..."
+print("loading model...")
 
 f = os.path.join(os.path.dirname(__file__), "en-model.slp")
 lexicon.model = Model.load(lexicon, f)
@@ -131,7 +131,7 @@ lexicon.model = Model.load(lexicon, f)
 # The accuracy will be lower when tested on, for example, informal tweets.
 # A different classifier could be trained for informal language use.
 
-print "testing..."
+print("testing...")
 
 i, n = 0, 0
 for s1 in data[-5000:]:
@@ -143,4 +143,4 @@ for s1 in data[-5000:]:
             i += 1
         n += 1
 
-print float(i) / n # accuracy
+print(float(i) / n) # accuracy

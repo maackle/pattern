@@ -68,7 +68,7 @@ class TestUtilityFunctions(unittest.TestCase):
         v.push(("a", 0))
         v = v.copy()
         self.assertTrue(isinstance(v, dict))
-        self.assertEqual(v.keys(), ["a", "c","b"])
+        self.assertEqual(list(v.keys()), ["a", "c","b"])
         print("pattern.search.odict()")
 
 #---------------------------------------------------------------------------------------------------

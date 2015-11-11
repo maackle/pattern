@@ -6,7 +6,7 @@ find a bug in Beautiful Soup, the best way to express it is as a test
 case like this that fails."""
 
 import unittest
-from BeautifulSoup import *
+from .BeautifulSoup import *
 
 class SoupTest(unittest.TestCase):
 
@@ -82,7 +82,7 @@ class FollowThatTag(SoupTest):
     def testFindAllText(self):
         soup = BeautifulSoup("<html>\xbb</html>")
         self.assertEqual(soup.findAll(text=re.compile('.*')),
-                         [u'\xbb'])
+                         ['\xbb'])
 
     def testFindAllByRE(self):
         import re
@@ -123,26 +123,26 @@ class FollowThatTag(SoupTest):
     def testParents(self):
         soup = BeautifulSoup('<ul id="foo"></ul><ul id="foo"><ul><ul id="foo" a="b"><b>Blah')
         b = soup.b
-        self.assertEquals(len(b.findParents('ul', {'id' : 'foo'})), 2)
-        self.assertEquals(b.findParent('ul')['a'], 'b')
+        self.assertEqual(len(b.findParents('ul', {'id' : 'foo'})), 2)
+        self.assertEqual(b.findParent('ul')['a'], 'b')
 
     PROXIMITY_TEST = BeautifulSoup('<b id="1"><b id="2"><b id="3"><b id="4">')
 
     def testNext(self):
         soup = self.PROXIMITY_TEST
         b = soup.find('b', {'id' : 2})
-        self.assertEquals(b.findNext('b')['id'], '3')
-        self.assertEquals(b.findNext('b')['id'], '3')
-        self.assertEquals(len(b.findAllNext('b')), 2)
-        self.assertEquals(len(b.findAllNext('b', {'id' : 4})), 1)
+        self.assertEqual(b.findNext('b')['id'], '3')
+        self.assertEqual(b.findNext('b')['id'], '3')
+        self.assertEqual(len(b.findAllNext('b')), 2)
+        self.assertEqual(len(b.findAllNext('b', {'id' : 4})), 1)
 
     def testPrevious(self):
         soup = self.PROXIMITY_TEST
         b = soup.find('b', {'id' : 3})
-        self.assertEquals(b.findPrevious('b')['id'], '2')
-        self.assertEquals(b.findPrevious('b')['id'], '2')
-        self.assertEquals(len(b.findAllPrevious('b')), 2)
-        self.assertEquals(len(b.findAllPrevious('b', {'id' : 2})), 1)
+        self.assertEqual(b.findPrevious('b')['id'], '2')
+        self.assertEqual(b.findPrevious('b')['id'], '2')
+        self.assertEqual(len(b.findAllPrevious('b')), 2)
+        self.assertEqual(len(b.findAllPrevious('b', {'id' : 2})), 1)
 
 
     SIBLING_TEST = BeautifulSoup('<blockquote id="1"><blockquote id="1.1"></blockquote></blockquote><blockquote id="2"><blockquote id="2.1"></blockquote></blockquote><blockquote id="3"><blockquote id="3.1"></blockquote></blockquote><blockquote id="4">')
@@ -151,30 +151,30 @@ class FollowThatTag(SoupTest):
         soup = self.SIBLING_TEST
         tag = 'blockquote'
         b = soup.find(tag, {'id' : 2})
-        self.assertEquals(b.findNext(tag)['id'], '2.1')
-        self.assertEquals(b.findNextSibling(tag)['id'], '3')
-        self.assertEquals(b.findNextSibling(tag)['id'], '3')
-        self.assertEquals(len(b.findNextSiblings(tag)), 2)
-        self.assertEquals(len(b.findNextSiblings(tag, {'id' : 4})), 1)
+        self.assertEqual(b.findNext(tag)['id'], '2.1')
+        self.assertEqual(b.findNextSibling(tag)['id'], '3')
+        self.assertEqual(b.findNextSibling(tag)['id'], '3')
+        self.assertEqual(len(b.findNextSiblings(tag)), 2)
+        self.assertEqual(len(b.findNextSiblings(tag, {'id' : 4})), 1)
 
     def testPreviousSibling(self):
         soup = self.SIBLING_TEST
         tag = 'blockquote'
         b = soup.find(tag, {'id' : 3})
-        self.assertEquals(b.findPrevious(tag)['id'], '2.1')
-        self.assertEquals(b.findPreviousSibling(tag)['id'], '2')
-        self.assertEquals(b.findPreviousSibling(tag)['id'], '2')
-        self.assertEquals(len(b.findPreviousSiblings(tag)), 2)
-        self.assertEquals(len(b.findPreviousSiblings(tag, id=1)), 1)
+        self.assertEqual(b.findPrevious(tag)['id'], '2.1')
+        self.assertEqual(b.findPreviousSibling(tag)['id'], '2')
+        self.assertEqual(b.findPreviousSibling(tag)['id'], '2')
+        self.assertEqual(len(b.findPreviousSiblings(tag)), 2)
+        self.assertEqual(len(b.findPreviousSiblings(tag, id=1)), 1)
 
     def testTextNavigation(self):
         soup = BeautifulSoup('Foo<b>Bar</b><i id="1"><b>Baz<br />Blee<hr id="1"/></b></i>Blargh')
         baz = soup.find(text='Baz')
-        self.assertEquals(baz.findParent("i")['id'], '1')
-        self.assertEquals(baz.findNext(text='Blee'), 'Blee')
-        self.assertEquals(baz.findNextSibling(text='Blee'), 'Blee')
-        self.assertEquals(baz.findNextSibling(text='Blargh'), None)
-        self.assertEquals(baz.findNextSibling('hr')['id'], '1')
+        self.assertEqual(baz.findParent("i")['id'], '1')
+        self.assertEqual(baz.findNext(text='Blee'), 'Blee')
+        self.assertEqual(baz.findNextSibling(text='Blee'), 'Blee')
+        self.assertEqual(baz.findNextSibling(text='Blargh'), None)
+        self.assertEqual(baz.findNextSibling('hr')['id'], '1')
 
 class SiblingRivalry(SoupTest):
     "Tests the nextSibling and previousSibling navigation."
@@ -182,53 +182,53 @@ class SiblingRivalry(SoupTest):
     def testSiblings(self):
         soup = BeautifulSoup("<ul><li>1<p>A</p>B<li>2<li>3</ul>")
         secondLI = soup.find('li').nextSibling
-        self.assert_(secondLI.name == 'li' and secondLI.string == '2')
-        self.assertEquals(soup.find(text='1').nextSibling.name, 'p')
-        self.assertEquals(soup.find('p').nextSibling, 'B')
-        self.assertEquals(soup.find('p').nextSibling.previousSibling.nextSibling, 'B')
+        self.assertTrue(secondLI.name == 'li' and secondLI.string == '2')
+        self.assertEqual(soup.find(text='1').nextSibling.name, 'p')
+        self.assertEqual(soup.find('p').nextSibling, 'B')
+        self.assertEqual(soup.find('p').nextSibling.previousSibling.nextSibling, 'B')
 
 class TagsAreObjectsToo(SoupTest):
     "Tests the various built-in functions of Tag objects."
 
     def testLen(self):
         soup = BeautifulSoup("<top>1<b>2</b>3</top>")
-        self.assertEquals(len(soup.top), 3)
+        self.assertEqual(len(soup.top), 3)
 
 class StringEmUp(SoupTest):
     "Tests the use of 'string' as an alias for a tag's only content."
 
     def testString(self):
         s = BeautifulSoup("<b>foo</b>")
-        self.assertEquals(s.b.string, 'foo')
+        self.assertEqual(s.b.string, 'foo')
 
     def testLackOfString(self):
         s = BeautifulSoup("<b>f<i>e</i>o</b>")
-        self.assert_(not s.b.string)
+        self.assertTrue(not s.b.string)
 
     def testStringAssign(self):
         s = BeautifulSoup("<b></b>")
         b = s.b
         b.string = "foo"
         string = b.string
-        self.assertEquals(string, "foo")
-        self.assert_(isinstance(string, NavigableString))
+        self.assertEqual(string, "foo")
+        self.assertTrue(isinstance(string, NavigableString))
 
 class AllText(SoupTest):
     "Tests the use of 'text' to get all of string content from the tag."
 
     def testText(self):
         soup = BeautifulSoup("<ul><li>spam</li><li>eggs</li><li>cheese</li>")
-        self.assertEquals(soup.ul.text, "spameggscheese")
-        self.assertEquals(soup.ul.getText('/'), "spam/eggs/cheese")
+        self.assertEqual(soup.ul.text, "spameggscheese")
+        self.assertEqual(soup.ul.getText('/'), "spam/eggs/cheese")
 
 class ThatsMyLimit(SoupTest):
     "Tests the limit argument."
 
     def testBasicLimits(self):
         s = BeautifulSoup('<br id="1" /><br id="1" /><br id="1" /><br id="1" />')
-        self.assertEquals(len(s.findAll('br')), 4)
-        self.assertEquals(len(s.findAll('br', limit=2)), 2)
-        self.assertEquals(len(s('br', limit=2)), 2)
+        self.assertEqual(len(s.findAll('br')), 4)
+        self.assertEqual(len(s.findAll('br', limit=2)), 2)
+        self.assertEqual(len(s('br', limit=2)), 2)
 
 class OnlyTheLonely(SoupTest):
     "Tests the parseOnly argument to the constructor."
@@ -244,19 +244,19 @@ class OnlyTheLonely(SoupTest):
     def testOnly(self):
         strainer = SoupStrainer("b")
         soup = BeautifulSoup(self.x, parseOnlyThese=strainer)
-        self.assertEquals(len(soup), 15)
+        self.assertEqual(len(soup), 15)
 
         strainer = SoupStrainer(id=re.compile("100.*"))
         soup = BeautifulSoup(self.x, parseOnlyThese=strainer)
-        self.assertEquals(len(soup), 5)
+        self.assertEqual(len(soup), 5)
 
         strainer = SoupStrainer(text=re.compile("10[01].*"))
         soup = BeautifulSoup(self.x, parseOnlyThese=strainer)
-        self.assertEquals(len(soup), 10)
+        self.assertEqual(len(soup), 10)
 
-        strainer = SoupStrainer(text=lambda(x):x[8]=='3')
+        strainer = SoupStrainer(text=lambda x:x[8]=='3')
         soup = BeautifulSoup(self.x, parseOnlyThese=strainer)
-        self.assertEquals(len(soup), 3)
+        self.assertEqual(len(soup), 3)
 
 class PickleMeThis(SoupTest):
     "Testing features like pickle and deepcopy."
@@ -294,7 +294,7 @@ class PickleMeThis(SoupTest):
         self.assertEqual(str(copied), str(self.soup))
 
     def testUnicodePickle(self):
-        import cPickle as pickle
+        import pickle as pickle
         html = "<b>" + chr(0xc3) + "</b>"
         soup = BeautifulSoup(html)
         dumped = pickle.dumps(soup, pickle.HIGHEST_PROTOCOL)
@@ -338,7 +338,7 @@ class WriteOnlyCode(SoupTest):
         soup = BeautifulSoup(text)
         c = soup.c
         soup.c.replaceWith(c)
-        self.assertEquals(str(soup), text)
+        self.assertEqual(str(soup), text)
 
         # A very simple case
         soup = BeautifulSoup("<b>Argh!</b>")
@@ -347,27 +347,27 @@ class WriteOnlyCode(SoupTest):
         b = soup.b
         self.assertEqual(newText.previous, b)
         self.assertEqual(newText.parent, b)
-        self.assertEqual(newText.previous.next, newText)
-        self.assertEqual(newText.next, None)
+        self.assertEqual(newText.previous.__next__, newText)
+        self.assertEqual(newText.__next__, None)
 
         # A more complex case
         soup = BeautifulSoup("<a><b>Argh!</b><c></c><d></d></a>")
         soup.b.insert(1, "Hooray!")
         newText = soup.find(text="Hooray!")
         self.assertEqual(newText.previous, "Argh!")
-        self.assertEqual(newText.previous.next, newText)
+        self.assertEqual(newText.previous.__next__, newText)
 
         self.assertEqual(newText.previousSibling, "Argh!")
         self.assertEqual(newText.previousSibling.nextSibling, newText)
 
         self.assertEqual(newText.nextSibling, None)
-        self.assertEqual(newText.next, soup.c)
+        self.assertEqual(newText.__next__, soup.c)
 
         text = "<html>There's <b>no</b> business like <b>show</b> business</html>"
         soup = BeautifulSoup(text)
         no, show = soup.findAll('b')
         show.replaceWith(no)
-        self.assertEquals(str(soup), "<html>There's  business like <b>no</b> business</html>")
+        self.assertEqual(str(soup), "<html>There's  business like <b>no</b> business</html>")
 
         # Even more complex
         soup = BeautifulSoup("<a><b>Find</b><c>lady!</c><d></d></a>")
@@ -380,14 +380,14 @@ class WriteOnlyCode(SoupTest):
         theText = tag.find(text=True)
         findText = b.find(text="Find")
 
-        self.assertEqual(findText.next, tag)
+        self.assertEqual(findText.__next__, tag)
         self.assertEqual(tag.previous, findText)
         self.assertEqual(b.nextSibling, tag)
         self.assertEqual(tag.previousSibling, b)
         self.assertEqual(tag.nextSibling, c)
         self.assertEqual(c.previousSibling, tag)
 
-        self.assertEqual(theText.next, c)
+        self.assertEqual(theText.__next__, c)
         self.assertEqual(c.previous, theText)
 
         # Aand... incredibly complex.
@@ -401,7 +401,7 @@ class WriteOnlyCode(SoupTest):
         self.assertEqual(str(soup), "<a>We<f>refuse</f></a><e>to<g>service</g></e>")
 
         self.assertEqual(f.previous, weText)
-        self.assertEqual(weText.next, f)
+        self.assertEqual(weText.__next__, f)
         self.assertEqual(f.previousSibling, weText)
         self.assertEqual(f.nextSibling, None)
         self.assertEqual(weText.nextSibling, f)
@@ -443,7 +443,7 @@ class WriteOnlyCode(SoupTest):
         oldPrevious = roman.previous
         endOfThisTag = roman.nextSibling.previous
         self.assertEqual(oldPrevious, "2")
-        self.assertEqual(roman.next, "i")
+        self.assertEqual(roman.__next__, "i")
         self.assertEqual(endOfThisTag, "ii")
         self.assertEqual(roman.previousSibling, numbers)
         self.assertEqual(roman.nextSibling, letters)
@@ -451,12 +451,12 @@ class WriteOnlyCode(SoupTest):
         roman.extract()
         self.assertEqual(roman.parent, None)
         self.assertEqual(roman.previous, None)
-        self.assertEqual(roman.next, "i")
+        self.assertEqual(roman.__next__, "i")
         self.assertEqual(letters.previous, '2')
         self.assertEqual(roman.previousSibling, None)
         self.assertEqual(roman.nextSibling, None)
-        self.assertEqual(endOfThisTag.next, None)
-        self.assertEqual(roman.b.contents[0].next, None)
+        self.assertEqual(endOfThisTag.__next__, None)
+        self.assertEqual(roman.b.contents[0].__next__, None)
         self.assertEqual(numbers.nextSibling, letters)
         self.assertEqual(letters.previousSibling, numbers)
         self.assertEqual(len(doc.contents), 2)
@@ -470,7 +470,7 @@ class WriteOnlyCode(SoupTest):
         three = soup.find(text="3")
         toExtract = soup.b
         soup.b.extract()
-        self.assertEqual(one.next, three)
+        self.assertEqual(one.__next__, three)
         self.assertEqual(three.previous, one)
         self.assertEqual(one.parent.nextSibling, three)
         self.assertEqual(three.previousSibling, soup.a)
@@ -485,7 +485,7 @@ class TheManWithoutAttributes(SoupTest):
 
     def testHasKey(self):
         text = "<foo attr='bar'>"
-        self.assertEquals(BeautifulSoup(text).foo.has_key('attr'), True)
+        self.assertEqual('attr' in BeautifulSoup(text).foo, True)
 
 class QuoteMeOnThat(SoupTest):
     "Test quoting"
@@ -495,7 +495,7 @@ class QuoteMeOnThat(SoupTest):
 
         text = """<foo attr='bar "brawls" happen'>a</foo>"""
         soup = BeautifulSoup(text)
-        self.assertEquals(soup.renderContents(), text)
+        self.assertEqual(soup.renderContents(), text)
 
         soup.foo['attr'] = 'Brawls happen at "Bob\'s Bar"'
         newText = """<foo attr='Brawls happen at "Bob&squot;s Bar"'>a</foo>"""
@@ -542,7 +542,7 @@ class OperatorOverload(SoupTest):
         self.assertEqual(soup.b.i.string, 'bar')
         self.assertEqual(soup.b['id'], '1')
         self.assertEqual(soup.b.contents[0], 'foo')
-        self.assert_(not soup.a)
+        self.assertTrue(not soup.a)
 
         #Test the .fooTag variant of .foo.
         self.assertEqual(soup.bTag.iTag.string, 'bar')
@@ -562,24 +562,24 @@ class NestableEgg(SoupTest):
         text = """<table id="1"><tr><td>Here's another table:
         <table id="2"><tr><td>Juicy text</td></tr></table></td></tr></table>"""
         soup = BeautifulSoup(text)
-        self.assertEquals(soup.table.table.td.string, 'Juicy text')
-        self.assertEquals(len(soup.findAll('table')), 2)
-        self.assertEquals(len(soup.table.findAll('table')), 1)
-        self.assertEquals(soup.find('table', {'id' : 2}).parent.parent.parent.name,
+        self.assertEqual(soup.table.table.td.string, 'Juicy text')
+        self.assertEqual(len(soup.findAll('table')), 2)
+        self.assertEqual(len(soup.table.findAll('table')), 1)
+        self.assertEqual(soup.find('table', {'id' : 2}).parent.parent.parent.name,
                           'table')
 
         text = "<table><tr><td><div><table>Foo</table></div></td></tr></table>"
         soup = BeautifulSoup(text)
-        self.assertEquals(soup.table.tr.td.div.table.contents[0], "Foo")
+        self.assertEqual(soup.table.tr.td.div.table.contents[0], "Foo")
 
         text = """<table><thead><tr>Foo</tr></thead><tbody><tr>Bar</tr></tbody>
         <tfoot><tr>Baz</tr></tfoot></table>"""
         soup = BeautifulSoup(text)
-        self.assertEquals(soup.table.thead.tr.contents[0], "Foo")
+        self.assertEqual(soup.table.thead.tr.contents[0], "Foo")
 
     def testBadNestedTables(self):
         soup = BeautifulSoup("<table><tr><table><tr id='nested'>")
-        self.assertEquals(soup.table.tr.table.tr['id'], 'nested')
+        self.assertEqual(soup.table.tr.table.tr['id'], 'nested')
 
 class CleanupOnAisleFour(SoupTest):
     """Here we test cleanup of text that breaks SGMLParser or is just
@@ -612,16 +612,16 @@ class CleanupOnAisleFour(SoupTest):
         self.assertSoupEquals(xml, xml)
         r = re.compile("foo.*bar")
         soup = BeautifulSoup(xml)
-        self.assertEquals(soup.find(text=r).string, "foobar")
-        self.assertEquals(soup.find(text=r).__class__, CData)
+        self.assertEqual(soup.find(text=r).string, "foobar")
+        self.assertEqual(soup.find(text=r).__class__, CData)
 
     def testComments(self):
         xml = "foo<!--foobar-->baz"
         self.assertSoupEquals(xml)
         r = re.compile("foo.*bar")
         soup = BeautifulSoup(xml)
-        self.assertEquals(soup.find(text=r).string, "foobar")
-        self.assertEquals(soup.find(text="foobar").__class__, Comment)
+        self.assertEqual(soup.find(text=r).string, "foobar")
+        self.assertEqual(soup.find(text="foobar").__class__, Comment)
 
     def testDeclaration(self):
         xml = "foo<!DOCTYPE foobar>baz"
@@ -629,15 +629,15 @@ class CleanupOnAisleFour(SoupTest):
         r = re.compile(".*foo.*bar")
         soup = BeautifulSoup(xml)
         text = "DOCTYPE foobar"
-        self.assertEquals(soup.find(text=r).string, text)
-        self.assertEquals(soup.find(text=text).__class__, Declaration)
+        self.assertEqual(soup.find(text=r).string, text)
+        self.assertEqual(soup.find(text=text).__class__, Declaration)
 
         namespaced_doctype = ('<!DOCTYPE xsl:stylesheet SYSTEM "htmlent.dtd">'
                               '<html>foo</html>')
         soup = BeautifulSoup(namespaced_doctype)
-        self.assertEquals(soup.contents[0],
+        self.assertEqual(soup.contents[0],
                           'DOCTYPE xsl:stylesheet SYSTEM "htmlent.dtd"')
-        self.assertEquals(soup.html.contents[0], 'foo')
+        self.assertEqual(soup.html.contents[0], 'foo')
 
     def testEntityConversions(self):
         text = "&lt;&lt;sacr&eacute;&#32;bleu!&gt;&gt;"
@@ -649,39 +649,39 @@ class CleanupOnAisleFour(SoupTest):
         xhtmlEnt = BeautifulStoneSoup.XHTML_ENTITIES
 
         soup = BeautifulStoneSoup(text, convertEntities=xmlEnt)
-        self.assertEquals(str(soup), "&lt;&lt;sacr&eacute; bleu!&gt;&gt;")
+        self.assertEqual(str(soup), "&lt;&lt;sacr&eacute; bleu!&gt;&gt;")
 
         soup = BeautifulStoneSoup(text, convertEntities=htmlEnt)
-        self.assertEquals(unicode(soup), u"&lt;&lt;sacr\xe9 bleu!&gt;&gt;")
+        self.assertEqual(str(soup), "&lt;&lt;sacr\xe9 bleu!&gt;&gt;")
 
         # Make sure the "XML", "HTML", and "XHTML" settings work.
         text = "&lt;&trade;&apos;"
         soup = BeautifulStoneSoup(text, convertEntities=xmlEnt)
-        self.assertEquals(unicode(soup), u"&lt;&trade;'")
+        self.assertEqual(str(soup), "&lt;&trade;'")
 
         soup = BeautifulStoneSoup(text, convertEntities=htmlEnt)
-        self.assertEquals(unicode(soup), u"&lt;\u2122&apos;")
+        self.assertEqual(str(soup), "&lt;\u2122&apos;")
 
         soup = BeautifulStoneSoup(text, convertEntities=xhtmlEnt)
-        self.assertEquals(unicode(soup), u"&lt;\u2122'")
+        self.assertEqual(str(soup), "&lt;\u2122'")
 
         invalidEntity = "foo&#bar;baz"
         soup = BeautifulStoneSoup\
                (invalidEntity,
                 convertEntities=htmlEnt)
-        self.assertEquals(str(soup), "foo&amp;#bar;baz")
+        self.assertEqual(str(soup), "foo&amp;#bar;baz")
 
         nonexistentEntity = "foo&bar;baz"
         soup = BeautifulStoneSoup\
                (nonexistentEntity,
                 convertEntities="xml")
-        self.assertEquals(str(soup), nonexistentEntity)
+        self.assertEqual(str(soup), nonexistentEntity)
 
 
     def testNonBreakingSpaces(self):
         soup = BeautifulSoup("<a>&nbsp;&nbsp;</a>",
                              convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
-        self.assertEquals(unicode(soup), u"<a>\xa0\xa0</a>")
+        self.assertEqual(str(soup), "<a>\xa0\xa0</a>")
 
     def testWhitespaceInDeclaration(self):
         self.assertSoupEquals('<! DOCTYPE>', '<!DOCTYPE>')
@@ -701,41 +701,41 @@ class CleanupOnAisleFour(SoupTest):
 
         soup = BeautifulSoup('<x t="&gt;&trade;">',
                              convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
-        self.assertEquals(unicode(soup), u'<x t="&gt;\u2122"></x>')
+        self.assertEqual(str(soup), '<x t="&gt;\u2122"></x>')
 
         uri = "http://crummy.com?sacr&eacute;&amp;bleu"
         link = '<a href="%s"></a>' % uri
         soup = BeautifulSoup(link)
-        self.assertEquals(unicode(soup), link)
+        self.assertEqual(str(soup), link)
         #self.assertEquals(unicode(soup.a['href']), uri)
 
         soup = BeautifulSoup(link, convertEntities=BeautifulSoup.HTML_ENTITIES)
-        self.assertEquals(unicode(soup),
-                          link.replace("&eacute;", u"\xe9"))
+        self.assertEqual(str(soup),
+                          link.replace("&eacute;", "\xe9"))
 
         uri = "http://crummy.com?sacr&eacute;&bleu"
         link = '<a href="%s"></a>' % uri
         soup = BeautifulSoup(link, convertEntities=BeautifulSoup.HTML_ENTITIES)
-        self.assertEquals(unicode(soup.a['href']),
-                          uri.replace("&eacute;", u"\xe9"))
+        self.assertEqual(str(soup.a['href']),
+                          uri.replace("&eacute;", "\xe9"))
 
     def testNakedAmpersands(self):
         html = {'convertEntities':BeautifulStoneSoup.HTML_ENTITIES}
         soup = BeautifulStoneSoup("AT&T ", **html)
-        self.assertEquals(str(soup), 'AT&amp;T ')
+        self.assertEqual(str(soup), 'AT&amp;T ')
 
         nakedAmpersandInASentence = "AT&T was Ma Bell"
         soup = BeautifulStoneSoup(nakedAmpersandInASentence,**html)
-        self.assertEquals(str(soup), \
+        self.assertEqual(str(soup), \
                nakedAmpersandInASentence.replace('&','&amp;'))
 
         invalidURL = '<a href="http://example.org?a=1&b=2;3">foo</a>'
         validURL = invalidURL.replace('&','&amp;')
         soup = BeautifulStoneSoup(invalidURL)
-        self.assertEquals(str(soup), validURL)
+        self.assertEqual(str(soup), validURL)
 
         soup = BeautifulStoneSoup(validURL)
-        self.assertEquals(str(soup), validURL)
+        self.assertEqual(str(soup), validURL)
 
 
 class EncodeRed(SoupTest):
@@ -745,44 +745,44 @@ class EncodeRed(SoupTest):
     def testUnicodeDammitStandalone(self):
         markup = "<foo>\x92</foo>"
         dammit = UnicodeDammit(markup)
-        self.assertEquals(dammit.unicode, "<foo>&#x2019;</foo>")
+        self.assertEqual(dammit.str, "<foo>&#x2019;</foo>")
 
         hebrew = "\xed\xe5\xec\xf9"
         dammit = UnicodeDammit(hebrew, ["iso-8859-8"])
-        self.assertEquals(dammit.unicode, u'\u05dd\u05d5\u05dc\u05e9')
-        self.assertEquals(dammit.originalEncoding, 'iso-8859-8')
+        self.assertEqual(dammit.str, '\u05dd\u05d5\u05dc\u05e9')
+        self.assertEqual(dammit.originalEncoding, 'iso-8859-8')
 
     def testGarbageInGarbageOut(self):
         ascii = "<foo>a</foo>"
         asciiSoup = BeautifulStoneSoup(ascii)
-        self.assertEquals(ascii, str(asciiSoup))
+        self.assertEqual(ascii, str(asciiSoup))
 
-        unicodeData = u"<foo>\u00FC</foo>"
+        unicodeData = "<foo>\u00FC</foo>"
         utf8 = unicodeData.encode("utf-8")
-        self.assertEquals(utf8, '<foo>\xc3\xbc</foo>')
+        self.assertEqual(utf8, '<foo>\xc3\xbc</foo>')
 
         unicodeSoup = BeautifulStoneSoup(unicodeData)
-        self.assertEquals(unicodeData, unicode(unicodeSoup))
-        self.assertEquals(unicode(unicodeSoup.foo.string), u'\u00FC')
+        self.assertEqual(unicodeData, str(unicodeSoup))
+        self.assertEqual(str(unicodeSoup.foo.string), '\u00FC')
 
         utf8Soup = BeautifulStoneSoup(utf8, fromEncoding='utf-8')
-        self.assertEquals(utf8, str(utf8Soup))
-        self.assertEquals(utf8Soup.originalEncoding, "utf-8")
+        self.assertEqual(utf8, str(utf8Soup))
+        self.assertEqual(utf8Soup.originalEncoding, "utf-8")
 
         utf8Soup = BeautifulStoneSoup(unicodeData)
-        self.assertEquals(utf8, str(utf8Soup))
-        self.assertEquals(utf8Soup.originalEncoding, None)
+        self.assertEqual(utf8, str(utf8Soup))
+        self.assertEqual(utf8Soup.originalEncoding, None)
 
 
     def testHandleInvalidCodec(self):
         for bad_encoding in ['.utf8', '...', 'utF---16.!']:
             soup = BeautifulSoup("Räksmörgås", fromEncoding=bad_encoding)
-            self.assertEquals(soup.originalEncoding, 'utf-8')
+            self.assertEqual(soup.originalEncoding, 'utf-8')
 
     def testUnicodeSearch(self):
-        html = u'<html><body><h1>Räksmörgås</h1></body></html>'
+        html = '<html><body><h1>Räksmörgås</h1></body></html>'
         soup = BeautifulSoup(html)
-        self.assertEqual(soup.find(text=u'Räksmörgås'),u'Räksmörgås')
+        self.assertEqual(soup.find(text='Räksmörgås'),'Räksmörgås')
 
     def testRewrittenXMLHeader(self):
         euc_jp = '<?xml version="1.0 encoding="euc-jp"?>\n<foo>\n\xa4\xb3\xa4\xec\xa4\xcfEUC-JP\xa4\xc7\xa5\xb3\xa1\xbc\xa5\xc7\xa5\xa3\xa5\xf3\xa5\xb0\xa4\xb5\xa4\xec\xa4\xbf\xc6\xfc\xcb\xdc\xb8\xec\xa4\xce\xa5\xd5\xa5\xa1\xa5\xa4\xa5\xeb\xa4\xc7\xa4\xb9\xa1\xa3\n</foo>\n'
@@ -794,8 +794,8 @@ class EncodeRed(SoupTest):
                             "cjkcodecs installed, this is a real problem. "
                             "Otherwise, ignore it.")
 
-        self.assertEquals(soup.originalEncoding, "euc-jp")
-        self.assertEquals(str(soup), utf8)
+        self.assertEqual(soup.originalEncoding, "euc-jp")
+        self.assertEqual(str(soup), utf8)
 
         old_text = "<?xml encoding='windows-1252'><foo>\x92</foo>"
         new_text = "<?xml version='1.0' encoding='utf-8'?><foo>&rsquo;</foo>"
@@ -810,7 +810,7 @@ class EncodeRed(SoupTest):
         # sure that doesn't happen.
         strainer = SoupStrainer('pre')
         soup = BeautifulSoup(no_shift_jis_html, parseOnlyThese=strainer)
-        self.assertEquals(soup.contents[0].name, 'pre')
+        self.assertEqual(soup.contents[0].name, 'pre')
 
         meta_tag = ('<meta content="text/html; charset=x-sjis" '
                     'http-equiv="Content-type" />')
@@ -829,10 +829,10 @@ class EncodeRed(SoupTest):
                             "If you're running Python >=2.4, or you have "
                             "cjkcodecs installed, this is a real problem. "
                             "Otherwise, ignore it." % meta_tag)
-        self.assertEquals(soup.originalEncoding, "shift-jis")
+        self.assertEqual(soup.originalEncoding, "shift-jis")
 
         content_type_tag = soup.meta['content']
-        self.assertEquals(content_type_tag[content_type_tag.find('charset='):],
+        self.assertEqual(content_type_tag[content_type_tag.find('charset='):],
                           'charset=%SOUP-ENCODING%')
         content_type = str(soup.meta)
         index = content_type.find('charset=')
@@ -843,7 +843,7 @@ class EncodeRed(SoupTest):
         self.assertEqual(content_type[index:index+len('charset=shift-jis')],
                          'charset=shift-jis')
 
-        self.assertEquals(str(soup), (
+        self.assertEqual(str(soup), (
                 '<html><head>\n'
                 '<meta content="text/html; charset=utf-8" '
                 'http-equiv="Content-type" />\n'
@@ -855,7 +855,7 @@ class EncodeRed(SoupTest):
                 '\x9c\xac\xe8\xaa\x9e\xe3\x81\xae\xe3\x83\x95\xe3\x82\xa1\xe3'
                 '\x82\xa4\xe3\x83\xab\xe3\x81\xa7\xe3\x81\x99\xe3\x80\x82\n'
                 '</pre></body></html>'))
-        self.assertEquals(soup.renderContents("shift-jis"),
+        self.assertEqual(soup.renderContents("shift-jis"),
                           shift_jis_html.replace('x-sjis', 'shift-jis'))
 
         isolatin ="""<html><meta http-equiv="Content-type" content="text/html; charset=ISO-Latin-1" />Sacr\xe9 bleu!</html>"""
@@ -867,7 +867,7 @@ class EncodeRed(SoupTest):
         iso_8859_8= '<HEAD>\n<TITLE>Hebrew (ISO 8859-8) in Visual Directionality</TITLE>\n\n\n\n</HEAD>\n<BODY>\n<H1>Hebrew (ISO 8859-8) in Visual Directionality</H1>\n\xed\xe5\xec\xf9\n</BODY>\n'
         utf8 = '<head>\n<title>Hebrew (ISO 8859-8) in Visual Directionality</title>\n</head>\n<body>\n<h1>Hebrew (ISO 8859-8) in Visual Directionality</h1>\n\xd7\x9d\xd7\x95\xd7\x9c\xd7\xa9\n</body>\n'
         soup = BeautifulStoneSoup(iso_8859_8, fromEncoding="iso-8859-8")
-        self.assertEquals(str(soup), utf8)
+        self.assertEqual(str(soup), utf8)
 
     def testSmartQuotesNotSoSmartAnymore(self):
         self.assertSoupEquals("\x91Foo\x92 <!--blah-->",
@@ -876,10 +876,10 @@ class EncodeRed(SoupTest):
     def testDontConvertSmartQuotesWhenAlsoConvertingEntities(self):
         smartQuotes = "Il a dit, \x8BSacr&eacute; bl&#101;u!\x9b"
         soup = BeautifulSoup(smartQuotes)
-        self.assertEquals(str(soup),
+        self.assertEqual(str(soup),
                           'Il a dit, &lsaquo;Sacr&eacute; bl&#101;u!&rsaquo;')
         soup = BeautifulSoup(smartQuotes, convertEntities="html")
-        self.assertEquals(str(soup),
+        self.assertEqual(str(soup),
                           'Il a dit, \xe2\x80\xb9Sacr\xc3\xa9 bleu!\xe2\x80\xba')
 
     def testDontSeeSmartQuotesWhereThereAreNone(self):

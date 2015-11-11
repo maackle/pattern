@@ -20,7 +20,7 @@
 # Unsupervised machine learning or clustering can be used to group unlabeled documents
 # into subsets based on their similarity.
 
-import stemmer; _stemmer=stemmer
+from . import stemmer; _stemmer=stemmer
 
 import sys
 import os
@@ -29,7 +29,7 @@ import glob
 import heapq
 import codecs
 import tempfile
-import cPickle
+import pickle
 import gzip
 import types
 
@@ -39,7 +39,7 @@ from random      import random, randint, uniform, choice, sample, seed
 from itertools   import chain
 from bisect      import insort
 from operator    import itemgetter
-from StringIO    import StringIO
+from io    import StringIO
 from codecs      import open
 from collections import defaultdict
 
@@ -61,9 +61,9 @@ except:
         singularize = lambda w, **k: w
         predicative = lambda w, **k: w
         conjugate   = lambda w, t, **k: w
-        tokenize    = lambda s: filter(len, 
+        tokenize    = lambda s: list(filter(len, 
                                     re.split(r"(.*?[\.|\?|\!])", 
-                                        re.sub(r"(\.|\?|\!|,|;|:)", " \\1", s)))
+                                        re.sub(r"(\.|\?|\!|,|;|:)", " \\1", s))))
 
 #--- STRING FUNCTIONS ------------------------------------------------------------------------------
 # Latin-1 (ISO-8859-1) encoding is identical to Windows-1252 except for the code points 128-159:
@@ -73,7 +73,7 @@ except:
 def decode_string(v, encoding="utf-8"):
     """ Returns the given value as a Unicode string (if possible).
     """
-    if isinstance(encoding, basestring):
+    if isinstance(encoding, str):
         encoding = ((encoding,),) + (("windows-1252",), ("utf-8", "ignore"))
     if isinstance(v, str):
         for e in encoding:
@@ -81,14 +81,14 @@ def decode_string(v, encoding="utf-8"):
             except:
                 pass
         return v
-    return unicode(v)
+    return str(v)
 
 def encode_string(v, encoding="utf-8"):
     """ Returns the given value as a Python byte string (if possible).
     """
-    if isinstance(encoding, basestring):
+    if isinstance(encoding, str):
         encoding = ((encoding,),) + (("windows-1252",), ("utf-8", "ignore"))
-    if isinstance(v, unicode):
+    if isinstance(v, str):
         for e in encoding:
             try: return v.encode(*e)
             except:
@@ -124,7 +124,7 @@ def chunk(iterable, n):
     n = int(n)
     i = 0
     j = 0
-    for m in xrange(n):
+    for m in range(n):
         j = i + len(a[m::n]) 
         yield a[i:j]
         i = j
@@ -134,7 +134,7 @@ def mix(iterables=[], n=10):
     """
     # list(mix([[1, 2, 3, 4], ["a", "b"]], n=2)) => [1, 2, "a", 3, 4, "b"]
     a = [list(chunk(x, n)) for x in iterables]
-    for i in xrange(int(n)):
+    for i in range(int(n)):
         for x in a:
             for item in x[i]:
                 yield item
@@ -245,10 +245,10 @@ def words(string, filter=lambda w: w.strip("'").isalnum(), punctuation=PUNCTUATI
         Common punctuation marks are stripped from words.
     """
     string = decode_utf8(string)
-    string = re.sub(r"([a-z|A-Z])'(m|s|ve|re|ll|d)", u"\\1 <QUOTE/>\\2", string)
-    string = re.sub(r"(c|d|gl|j|l|m|n|s|t|un)'([a-z|A-Z])", u"\\1<QUOTE/> \\2", string)
-    words = (w.strip(punctuation).replace(u"<QUOTE/>", "'", 1) for w in string.split())
-    words = (w for w in words if filter is None or filter(w) is not False)
+    string = re.sub(r"([a-z|A-Z])'(m|s|ve|re|ll|d)", "\\1 <QUOTE/>\\2", string)
+    string = re.sub(r"(c|d|gl|j|l|m|n|s|t|un)'([a-z|A-Z])", "\\1<QUOTE/> \\2", string)
+    words = (w.strip(punctuation).replace("<QUOTE/>", "'", 1) for w in string.split())
+    words = (w for w in words if filter is None or list(filter(w)) is not False)
     words = [w for w in words if w]
     return words
 
@@ -261,7 +261,7 @@ def stem(word, stemmer=PORTER, **kwargs):
     """
     if hasattr(word, "string") and stemmer in (PORTER, None):
         word = word.string
-    if isinstance(word, basestring):
+    if isinstance(word, str):
         word = decode_utf8(word.lower())
     if stemmer is None:
         return word.lower()
@@ -300,18 +300,18 @@ def count(words=[], top=None, threshold=0, stemmer=None, exclude=[], stopwords=F
         w2 = w
         if hasattr(w, "string"): # pattern.en.Word
             w1 = w.string.lower()
-        if isinstance(w, basestring):
+        if isinstance(w, str):
             w1 = w.lower()
             w2 = w.lower()
         if (stopwords or not w1 in _stopwords.get(language or "en", ())) and not w1 in exclude:
             if stemmer is not None:
                 w2 = stem(w2, stemmer, **kwargs).lower()
             dict.__setitem__(count, w2, (w2 in count) and count[w2]+1 or 1)
-    for k in count.keys():
+    for k in list(count.keys()):
         if count[k] <= threshold:
             dict.__delitem__(count, k)
     if top is not None:
-        count = count.__class__(heapq.nsmallest(top, count.items(), key=lambda kv: (-kv[1], kv[0])))
+        count = count.__class__(heapq.nsmallest(top, list(count.items()), key=lambda kv: (-kv[1], kv[0])))
     return count
 
 def character_ngrams(string="", n=3, top=None, threshold=0, exclude=[], **kwargs):
@@ -324,14 +324,14 @@ def character_ngrams(string="", n=3, top=None, threshold=0, exclude=[], **kwargs
     # e.g., count(words, dict=readonlydict) as used in Document.
     count = defaultdict(int)
     if n > 0:
-        for i in xrange(len(string)-n+1):
+        for i in range(len(string)-n+1):
             w = string[i:i+n]
             if w not in exclude:
                 count[w] += 1
     if threshold > 0:
-        count = dict((k, v) for k, v in count.items() if v > threshold)
+        count = dict((k, v) for k, v in list(count.items()) if v > threshold)
     if top is not None:
-        count = dict(heapq.nsmallest(top, count.items(), key=lambda kv: (-kv[1], kv[0])))
+        count = dict(heapq.nsmallest(top, list(count.items()), key=lambda kv: (-kv[1], kv[0])))
     return kwargs.get("dict", dict)(count)
     
 chngrams = character_ngrams
@@ -385,7 +385,7 @@ class Document(object):
         if string is None:
             w = kwargs["dict"]()
             v = None
-        elif isinstance(string, basestring):
+        elif isinstance(string, str):
             w = words(string, **kwargs)
             w = count(w, **kwargs)
             v = None
@@ -554,7 +554,7 @@ class Document(object):
     
     @property
     def features(self):
-        return self._terms.keys()
+        return list(self._terms.keys())
     
     @property
     def count(self):
@@ -658,7 +658,7 @@ class Document(object):
             With normalized=True, weights are normalized between 0.0 and 1.0 (their sum will be 1.0).
         """
         n = normalized and sum(self.vector.values()) or 1.0
-        v = ((f/n, w) for w, f in self.vector.items())
+        v = ((f/n, w) for w, f in list(self.vector.items()))
         v = heapq.nsmallest(top, v, key=lambda v: (-v[0], v[1]))
         return v
     
@@ -721,7 +721,7 @@ class Vector(readonlydict):
                 w = args[0].weight
             # From a dict.
             if isinstance(args[0], dict):
-                f = args[0].items()
+                f = list(args[0].items())
             # From an iterator.
             elif hasattr(args[0], "__iter__"):
                 f = iter(args[0])
@@ -730,7 +730,7 @@ class Vector(readonlydict):
         self.weight = kwargs.pop("weight", w) # TF, TFIDF, IG, BINARY or None.
         self._norm  = None                    # Cached L2-norm.
         # Exclude zero weights (sparse=True).
-        f = chain(f, kwargs.items())
+        f = chain(f, list(kwargs.items()))
         f = ((k, v) for k, v in f if not s or v != 0)
         readonlydict.__init__(self, f)
 
@@ -740,7 +740,7 @@ class Vector(readonlydict):
 
     @property
     def features(self):
-        return self.keys()
+        return list(self.keys())
     
     @property
     def l2_norm(self):
@@ -749,7 +749,7 @@ class Vector(readonlydict):
             The matrix norm is used to normalize (0.0-1.0) cosine similarity between documents.
         """
         if self._norm is None: 
-            self._norm = sum(w * w for w in self.values()) ** 0.5
+            self._norm = sum(w * w for w in list(self.values())) ** 0.5
         return self._norm
         
     norm = l2 = L2 = L2norm = l2norm = L2_norm = l2_norm
@@ -765,7 +765,7 @@ class Vector(readonlydict):
             vector = vector.vector
         v = self.copy()
         s = dict.__setitem__
-        for f, w in vector.items():
+        for f, w in list(vector.items()):
             if f in v:
                 s(v, f, w)
         return v
@@ -809,14 +809,14 @@ def l2_norm(v):
     """
     if isinstance(v, Vector):
         return v.l2_norm
-    return sum(w * w for w in v.values()) ** 0.5
+    return sum(w * w for w in list(v.values())) ** 0.5
     
 norm = l2 = L2 = L2norm = l2norm = L2_norm = l2_norm
 
 def cosine_similarity(v1, v2):
     """ Returns the cosine similarity of the given vectors.
     """
-    s = sum(v1.get(f, 0) * w for f, w in v2.items())
+    s = sum(v1.get(f, 0) * w for f, w in list(v2.items()))
     s = float(s) / (l2_norm(v1) * l2_norm(v2) or 1)
     return s
     
@@ -930,7 +930,7 @@ class Model(object):
 
     @property
     def terms(self):
-        return self.vector.keys()
+        return list(self.vector.keys())
         
     features = words = terms
     
@@ -964,7 +964,7 @@ class Model(object):
     def load(cls, path):
         """ Loads the model from a gzipped pickle file created with Model.save().
         """
-        model = cPickle.loads(gzip.GzipFile(path, "rb").read())
+        model = pickle.loads(gzip.GzipFile(path, "rb").read())
         # Deserialize Model.classifier.
         if model.classifier:
             p = path + ".tmp"
@@ -997,7 +997,7 @@ class Model(object):
             self._classifier.save(p, final)
             self._classifier = open(p, "rb").read(); os.remove(p)
         f = gzip.GzipFile(path, "wb")
-        f.write(cPickle.dumps(self, 1))  # 1 = binary
+        f.write(pickle.dumps(self, 1))  # 1 = binary
         f.close()
         
     def export(self, path, format=ORANGE, **kwargs):
@@ -1111,7 +1111,7 @@ class Model(object):
         """
         self.df(None) # Populate document frequency cache.
         n = normalized and sum(self._df.values()) or 1.0
-        v = ((f/n, w) for w, f in self._df.items())
+        v = ((f/n, w) for w, f in list(self._df.items()))
         v = heapq.nsmallest(top, v, key=lambda v: (-v[0], v[1]))
         return v
     
@@ -1128,7 +1128,7 @@ class Model(object):
             # (i.e., calculated all at once). Drawback is if you need it for just one word.
             df = self._df
             for d in self.documents:
-                for w, f in d.terms.items():
+                for w, f in list(d.terms.items()):
                     if f != 0:
                         df[w] = (w in df) and df[w] + 1 or 1.0
             for w in df:
@@ -1290,10 +1290,10 @@ class Model(object):
         documents = kwargs.get("documents", self.documents)
         if not getattr(self, "lsa", None):
             # Using document vectors:
-            vectors, features = [d.vector for d in documents], self.vector.keys()
+            vectors, features = [d.vector for d in documents], list(self.vector.keys())
         else:
             # Using LSA concept space:
-            vectors, features = [self.lsa[d.id] for d in documents], range(len(self.lsa))
+            vectors, features = [self.lsa[d.id] for d in documents], list(range(len(self.lsa)))
         # Create a dictionary of vector.id => Document.
         # We need it to map the clustered vectors back to the actual documents.
         map = dict((v.id, documents[i]) for i, v in enumerate(vectors))
@@ -1428,7 +1428,7 @@ class Model(object):
             C = dict.fromkeys(self.classes, 0)
             for d in self.documents:
                 C[d.type] += 1
-            HC = H(C.values())
+            HC = H(list(C.values()))
             # V => {feature: {value: {class: count}}}
             F = set(self.features)
             V = dict((f, defaultdict(lambda: defaultdict(lambda: 0))) for f in F)
@@ -1441,7 +1441,7 @@ class Model(object):
                 # Equal-width binning.
                 # Features with float values are taken to range between 0.0-1.0,
                 # for which 10 discrete intervals are used (0.1, 0.2, 0.3, ...).
-                for f, v in d_vector.items():
+                for f, v in list(d_vector.items()):
                     if isinstance(v, float):
                         v = round(v, 1)
                     V[f][v][d.type] += 1
@@ -1451,7 +1451,7 @@ class Model(object):
                 # This is done with the two lines above, however
                 # the code below is over a 1000x faster (less dict.__getitem__).
             for f in F:
-                for type, n in C.items():
+                for type, n in list(C.items()):
                     V[f][0][type] += n - sum(V[f][v][type] for v in V[f])
             # IG
             for f in F:
@@ -1460,8 +1460,8 @@ class Model(object):
                 n  = float(n) or 1
                 ig = HC
                 si = 0 # split info
-                for Cv in Vf.values():
-                    Cv = Cv.values()
+                for Cv in list(Vf.values()):
+                    Cv = list(Cv.values())
                     pv = sum(Cv) / n
                     ig = ig - pv * H(Cv)
                     si = si + H([pv])
@@ -1513,7 +1513,7 @@ class Model(object):
         features = set(features)
         model = Model(weight=self.weight)
         model.extend([
-            Document(dict((w, f) for w, f in d.terms.items() if w in features),
+            Document(dict((w, f) for w, f in list(d.terms.items()) if w in features),
                        name = d.name,
                        type = d.type,
                    language = d.language,
@@ -1578,7 +1578,7 @@ class Apriori(object):
             for s2 in sets:
                 if s1.issubset(s2):
                     Lk[s1] = s1 in Lk and Lk[s1] + x or x
-        return dict((s, f) for s, f in Lk.items() if f >= support)
+        return dict((s, f) for s, f in list(Lk.items()) if f >= support)
 
     def __call__(self, sets=[], support=0.5):
         """ Returns a dictionary of (set(features), frequency)-items.
@@ -1588,7 +1588,7 @@ class Apriori(object):
         sets = [set(iterable) for iterable in sets]
         C1 = self.C1(sets)
         L1 = self.Lk(sets, C1, support)
-        self._candidates = [L1.keys()]
+        self._candidates = [list(L1.keys())]
         self._support = L1
         while True:
             # Terminate when no further extensions are found.
@@ -1597,7 +1597,7 @@ class Apriori(object):
             # Extend frequent subsets one item at a time.
             Ck = self.Ck(self._candidates[-1])
             Lk = self.Lk(sets, Ck, support)
-            self._candidates.append(Lk.keys())
+            self._candidates.append(list(Lk.keys()))
             self._support.update(Lk)
         return self._support
         
@@ -1619,7 +1619,7 @@ class LSA(object):
         """
         import numpy
         # Calling Model.vector() in a loop is quite slow, we should refactor this:
-        matrix = [model.vector(d).values() for d in model.documents]
+        matrix = [list(model.vector(d).values()) for d in model.documents]
         matrix = numpy.array(matrix)
         # Singular value decomposition, where u * sigma * vt = svd(matrix).
         # Sigma is the diagonal matrix of singular values,
@@ -1643,7 +1643,7 @@ class LSA(object):
         # The maximum length of a concept vector = the number of documents.
         assert k < len(model.documents), \
             "can't create more dimensions than there are documents"
-        tail = lambda list, i: range(len(list)-i, len(list))
+        tail = lambda list, i: list(range(len(list)-i, len(list)))
         u, sigma, vt = (
             numpy.delete(u, tail(u[0], k), axis=1),
             numpy.delete(sigma, tail(sigma, k), axis=0),
@@ -1662,7 +1662,7 @@ class LSA(object):
     def terms(self):
         """ Yields a list of all terms, identical to LSA.model.vector.keys().
         """
-        return self._terms.values()
+        return list(self._terms.values())
         
     features = words = terms
 
@@ -1822,7 +1822,7 @@ def k_means(vectors, k=None, iterations=10, distance=COSINE, seed=RANDOM, **kwar
     if seed == KMPP:
         clusters = kmpp(vectors, k, distance)
     else:
-        clusters = [[] for i in xrange(int(k))]
+        clusters = [[] for i in range(int(k))]
         for i, v in enumerate(sorted(vectors, key=lambda x: random())):
             # Randomly partition the vectors across k clusters.
             clusters[i % int(k)].append(v)
@@ -1843,10 +1843,10 @@ def k_means(vectors, k=None, iterations=10, distance=COSINE, seed=RANDOM, **kwar
         # check if it is nearer to the center of another cluster.
         # If so, assign it. When visualized, this produces a Voronoi diagram.
         converged = True
-        for i in xrange(len(clusters)):
+        for i in range(len(clusters)):
             for v in clusters[i]:
                 nearest, d1 = i, distance(v, centroids[i])
-                for j in xrange(len(clusters)):
+                for j in range(len(clusters)):
                     if D[(i,j)] < d1: # Triangle inequality (Elkan, 2003).
                         d2 = distance(v, centroids[j])
                         if d2 < d1:
@@ -1897,7 +1897,7 @@ def kmpp(vectors, k, distance=COSINE):
         d = [min(d[i], distance(v, centroids[-1])) for i, v in enumerate(vectors)]
         s = sum(d)
     # Assign points to the nearest center.
-    clusters = [[] for i in xrange(int(k))]
+    clusters = [[] for i in range(int(k))]
     for v1 in vectors:
         d = [distance(v1, v2) for v2 in centroids]
         clusters[d.index(min(d))].append(v1)
@@ -2043,7 +2043,7 @@ class Classifier(object):
     def classes(self):
         """ Yields a list of trained classes.
         """
-        return self._classes.keys()
+        return list(self._classes.keys())
     
     terms, types = features, classes
 
@@ -2063,14 +2063,14 @@ class Classifier(object):
     def majority(self):
         """ Yields the majority class (= most frequent class).
         """
-        d = sorted((v, k) for k, v in self._classes.items())
+        d = sorted((v, k) for k, v in list(self._classes.items()))
         return d and d[-1][1] or None
     
     @property
     def minority(self):
         """ Yields the minority class (= least frequent class).
         """
-        d = sorted((v, k) for k, v in self._classes.items())
+        d = sorted((v, k) for k, v in list(self._classes.items()))
         return d and d[0][1] or None
         
     @property
@@ -2080,7 +2080,7 @@ class Classifier(object):
         """
         if self._baseline not in (MAJORITY, FREQUENCY):
             return self._baseline
-        return ([(0, None)] + sorted([(v, k) for k, v in self._classes.items()]))[-1][1]
+        return ([(0, None)] + sorted([(v, k) for k, v in list(self._classes.items())]))[-1][1]
         
     @property
     def weighted_random_baseline(self):
@@ -2088,7 +2088,7 @@ class Classifier(object):
             accuracy with classes predicted randomly according to their distribution.
         """
         n = float(sum(self.distribution.values())) or 1
-        return sum(map(lambda x: (x / n) ** 2, self.distribution.values()))
+        return sum([(x / n) ** 2 for x in list(self.distribution.values())])
     
     wrb = weighted_random_baseline
         
@@ -2139,7 +2139,7 @@ class Classifier(object):
             return type, Vector(document, **kwargs)
         if isinstance(document, (list, tuple)):
             return type, Document(document, filter=None, stopwords=True).vector
-        if isinstance(document, basestring):
+        if isinstance(document, str):
             return type, Document(document, filter=None, stopwords=True).vector
 
     @classmethod
@@ -2193,7 +2193,7 @@ class Classifier(object):
             self.finalize()
         self.test = None # Can't pickle instancemethods.
         f = gzip.GzipFile(path, "wb")
-        f.write(cPickle.dumps(self, 1)) # 1 = binary
+        f.write(pickle.dumps(self, 1)) # 1 = binary
         f.close()
 
     @classmethod
@@ -2201,7 +2201,7 @@ class Classifier(object):
         """ Loads the classifier from a gzipped pickle file.
         """
         f = gzip.GzipFile(path, "rb")
-        self = cPickle.loads(f.read())
+        self = pickle.loads(f.read())
         self._on_load(path) # Initialize subclass (e.g., SVM).
         self.test = self._test
         f.close()
@@ -2241,7 +2241,7 @@ class ConfusionMatrix(defaultdict):
         FP = 0 # False positives (type I error).
         FN = 0 # False negatives (type II error).
         for t1 in self:
-            for t2, n in self[t1].items():
+            for t2, n in list(self[t1].items()):
                 if target == t1 == t2: 
                     TP += n
                 if target != t1 == t2: 
@@ -2289,7 +2289,7 @@ class ConfusionMatrix(defaultdict):
         """ Returns the matrix as a string with rows and columns.
         """
         k = sorted(self)
-        n = max(map(lambda x: len(decode_utf8(x)), k))
+        n = max([len(decode_utf8(x)) for x in k])
         n = max(n, *(len(str(self[k1][k2])) for k1 in k for k2 in k)) + padding
         s = "".ljust(n)
         for t1 in k:
@@ -2302,7 +2302,7 @@ class ConfusionMatrix(defaultdict):
         return s
     
     def __repr__(self):
-        return repr(dict((k, dict(v)) for k, v in self.items()))
+        return repr(dict((k, dict(v)) for k, v in list(self.items())))
 
 def K_fold_cross_validation(Classifier, documents=[], folds=10, **kwargs):
     """ Returns an (accuracy, precisiom, recall, F1-score, standard deviation)-tuple.
@@ -2319,7 +2319,7 @@ def K_fold_cross_validation(Classifier, documents=[], folds=10, **kwargs):
     f = []
     # Create shuffled folds to avoid a list sorted by type 
     # (we take successive folds and the source data could be sorted).
-    if isinstance(K, (int, float, long)):
+    if isinstance(K, (int, float)):
         folds = list(_folds(shuffled(documents) if s else documents, K))
     # K tests with different train (d1) and test (d2) sets.
     for d1, d2 in folds:
@@ -2352,13 +2352,13 @@ def folds(documents=[], K=10, **kwargs):
         a = list(iterable)
         i = 0
         j = 0
-        for m in xrange(n):
+        for m in range(n):
             j = i + len(a[m::n])
             yield a[i:j]
             i = j
     k = kwargs.get("k", K)
     d = list(chunks(documents, max(k, 2)))
-    for holdout in xrange(k):
+    for holdout in range(k):
         yield list(chain(*(d[:holdout] + d[holdout+1:]))), d[holdout]
 
 _folds = folds
@@ -2384,7 +2384,7 @@ def gridsearch(Classifier, documents=[], folds=10, **kwargs):
     s = [] # [((A, P, R, F, o), parameters), ...]
     p = [] # [[("c", 0.1), ("c", 10), ...], 
            #  [("gamma", 0.1), ("gamma", 0.2), ...], ...]
-    for k, v in kwargs.items():
+    for k, v in list(kwargs.items()):
         p.append([(k, v) for v in v])
     for p in product(*p):
         p = dict(p)
@@ -2436,7 +2436,7 @@ class NB(Classifier):
 
     @property
     def features(self):
-        return self._features.keys()
+        return list(self._features.keys())
 
     def train(self, document, type=None):
         """ Trains the classifier with the given document of the given type (i.e., class).
@@ -2450,7 +2450,7 @@ class NB(Classifier):
         self._classes[type] = self._classes.get(type, 0) + 1
         self._likelihood.setdefault(type, {})
         self._cache.pop(type, None)
-        for f, w in vector.items():
+        for f, w in list(vector.items()):
             if self._method in (BINARY, BINOMIAL, BERNOUILLI):
                 w = 1
             self._features[f] = self._features.get(f, 0) + 1
@@ -2468,7 +2468,7 @@ class NB(Classifier):
         v = self._vector(document)[1]
         m = self._method
         a = self._alpha
-        n = self._classes.values()
+        n = list(self._classes.values())
         n = float(sum(n))
         p = defaultdict(float)
         for type in self._classes:
@@ -2493,7 +2493,7 @@ class NB(Classifier):
             # Ties are broken in favor of the majority class
             # (random winner for majority ties).
             m = max(p.values())
-            p = sorted((self._classes[type], type) for type, g in p.items() if g == m > 0)
+            p = sorted((self._classes[type], type) for type, g in list(p.items()) if g == m > 0)
             p = [type for frequency, type in p if frequency == p[0][0]]
             return choice(p)
         except:
@@ -2544,7 +2544,7 @@ class KNN(Classifier):
             # Ties are broken in favor of the majority class
             # (random winner for majority ties).
             m = max(p.values())
-            p = sorted((self._classes[type], type) for type, w in p.items() if w == m > 0)
+            p = sorted((self._classes[type], type) for type, w in list(p.items()) if w == m > 0)
             p = [type for frequency, type in p if frequency == p[0][0]]
             return choice(p)
         except:
@@ -2714,7 +2714,7 @@ class SLP(Classifier):
 
     @property
     def features(self):
-        return list(set(chain(*(f.keys() for f in self._weight.values()))))
+        return list(set(chain(*(list(f.keys()) for f in list(self._weight.values())))))
         
     def train(self, document, type=None):
         """ Trains the classifier with the given document of the given type (i.e., class).
@@ -2750,7 +2750,7 @@ class SLP(Classifier):
         i = self._iteration or 1
         i = float(i)
         p = defaultdict(float)
-        for type, w in self._weight.items():
+        for type, w in list(self._weight.items()):
             #p[type] = sum(w[f][0] for f in v if f in w) # Without averaging.
             s = 0
             for f in v:
@@ -2759,8 +2759,8 @@ class SLP(Classifier):
                     s += ((i-j) * w0 + w1) / i
             p[type] = s
         # Normalize probability estimates.
-        m = min(chain(p.values(), (0,)))
-        s = sum(x-m for x in p.values()) or 1
+        m = min(chain(list(p.values()), (0,)))
+        s = sum(x-m for x in list(p.values())) or 1
         for type in p:
             p[type] -= m
             p[type] /= s
@@ -2770,7 +2770,7 @@ class SLP(Classifier):
             # Ties are broken in favor of the majority class
             # (random winner for majority ties).
             m = max(p.values())
-            p = sorted((self._classes[type], type) for type, w in p.items() if w == m > 0)
+            p = sorted((self._classes[type], type) for type, w in list(p.items()) if w == m > 0)
             p = [type for frequency, type in p if frequency == p[0][0]]
             return choice(p)
         except:
@@ -2808,8 +2808,8 @@ def matrix(m, n, a=0.0, b=0.0):
         If a and b are given, values are uniformly random between a and b.
     """
     if a == b == 0:
-        return [[0.0] * n for i in xrange(m)]
-    return [[uniform(a, b) for j in xrange(n)] for i in xrange(m)]
+        return [[0.0] * n for i in range(m)]
+    return [[uniform(a, b) for j in range(n)] for i in range(m)]
 
 def sigmoid(x):
     """ Forward propagation activation function.
@@ -2973,7 +2973,7 @@ class BPNN(Classifier):
         v = self._vector(document)[1]
         i = [v.get(f, 0.0) for f in H1]
         o = self._classify(i)[0]
-        c = min(H3.keys(), key=lambda k: abs(k - o))
+        c = min(list(H3.keys()), key=lambda k: abs(k - o))
         c = H3[c]
         return c
 
@@ -3047,7 +3047,7 @@ class SVM(Classifier):
             - extension = (LIBSVM, LIBLINEAR),
             -     train = []
         """
-        import svm
+        from . import svm
         self._svm = svm
         # Cached LIBSVM or LIBLINEAR model:
         self._model = None
@@ -3167,8 +3167,8 @@ class SVM(Classifier):
         H1 = dict((w, i+1) for i, w in enumerate(self.features))     # Feature => integer hash.
         H2 = dict((w, i+1) for i, w in enumerate(self.classes))      # Class => integer hash.
         H3 = dict((i+1, w) for i, w in enumerate(self.classes))      # Class reversed hash.
-        x  = map(lambda v: dict(map(lambda k: (H1[k], v[k]), v)), M) # Hashed vectors.
-        y  = map(lambda v: H2[v[0]], self._vectors)                  # Hashed classes.
+        x  = [dict([(H1[k], v[k]) for k in v]) for v in M] # Hashed vectors.
+        y  = [H2[v[0]] for v in self._vectors]                  # Hashed classes.
         # For linear SVC, use LIBLINEAR which is faster.
         # For kernel SVC, use LIBSVM.
         if self.extension == LIBLINEAR:
@@ -3210,7 +3210,7 @@ class SVM(Classifier):
         H3 = self._model[3]
         n  = len(H1)
         v  = self._vector(document)[1]
-        v  = dict(map(lambda k: (H1.get(k[1], k[0] + n + 1), v[k[1]]), enumerate(v)))
+        v  = dict([(H1.get(k[1], k[0] + n + 1), v[k[1]]) for k in enumerate(v)])
         # For linear SVC, use LIBLINEAR which is 10x faster.
         # For kernel SVC, use LIBSVM.
         if self.extension == LIBLINEAR:
@@ -3277,7 +3277,7 @@ class SVM(Classifier):
         # 2) Extract the model string and save it as a temporary file.
         # 3) Use pattern.vector.svm's LIBSVM or LIBLINEAR to load the file.
         # 4) Delete the temporary file.
-        import svm                               # 1
+        from . import svm                               # 1
         self._svm = svm
         if self._model is not None:
             f = tempfile.NamedTemporaryFile("r+b")
@@ -3390,7 +3390,7 @@ class GeneticAlgorithm(object):
         n = len(p)
         for candidate in self.population:
             i = randint(0, n-1)
-            j = choice([x for x in xrange(n) if x != i]) if n > 1 else 0
+            j = choice([x for x in range(n) if x != i]) if n > 1 else 0
             g.append(self.combine(p[i], p[j]))
             if random() <= mutation:
                 g[-1] = self.mutate(g[-1])

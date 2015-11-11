@@ -1,6 +1,6 @@
 import sys
 import cherrypy
-from cherrypy._cpcompat import basestring, ntou, json, json_encode, json_decode
+from cherrypy._cpcompat import str, ntou, json, json_encode, json_decode
 
 def json_processor(entity):
     """Read application/json data into request.json."""
@@ -40,13 +40,13 @@ def json_in(content_type=[ntou('application/json'), ntou('text/javascript')],
     package importable; otherwise, ValueError is raised during processing.
     """
     request = cherrypy.serving.request
-    if isinstance(content_type, basestring):
+    if isinstance(content_type, str):
         content_type = [content_type]
 
     if force:
         if debug:
             cherrypy.log('Removing body processors %s' %
-                         repr(request.body.processors.keys()), 'TOOLS.JSON_IN')
+                         repr(list(request.body.processors.keys())), 'TOOLS.JSON_IN')
         request.body.processors.clear()
         request.body.default_proc = cherrypy.HTTPError(
             415, 'Expected an entity of content type %s' %

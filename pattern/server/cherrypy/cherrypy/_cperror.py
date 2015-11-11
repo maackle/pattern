@@ -107,7 +107,7 @@ and not simply return an error message as a result.
 from cgi import escape as _escape
 from sys import exc_info as _exc_info
 from traceback import format_exception as _format_exception
-from cherrypy._cpcompat import basestring, bytestr, iteritems, ntob, tonative, urljoin as _urljoin
+from cherrypy._cpcompat import str, bytestr, iteritems, ntob, tonative, urljoin as _urljoin
 from cherrypy.lib import httputil as _httputil
 
 
@@ -189,7 +189,7 @@ class HTTPRedirect(CherryPyException):
         import cherrypy
         request = cherrypy.serving.request
 
-        if isinstance(urls, basestring):
+        if isinstance(urls, str):
             urls = [urls]
 
         abs_urls = []

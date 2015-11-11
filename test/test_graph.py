@@ -22,8 +22,8 @@ class TestUtilityFunctions(unittest.TestCase):
         # Assert deep copy for different types.
         for o1 in (
           None, True, False, 
-          "a", u"a", 
-          1, 1.0, 1L, complex(1), 
+          "a", "a", 
+          1, 1.0, 1, complex(1), 
           list([1]), tuple([1]), set([1]), frozenset([1]),
           dict(a=1), {frozenset(["a"]):1}, {MyObject(1):1}, 
           MyObject(1)):
@@ -76,7 +76,7 @@ class TestNode(unittest.TestCase):
         self.assertTrue(n.fill          == None)
         self.assertTrue(n.stroke        == (0,0,0,1))
         self.assertTrue(n.strokewidth   == 1)
-        self.assertTrue(n.text.string   == u"a")
+        self.assertTrue(n.text.string   == "a")
         self.assertTrue(n.text.width    == 85)
         self.assertTrue(n.text.fill     == (0,0,0,1))
         self.assertTrue(n.text.fontsize == 11)
@@ -455,7 +455,7 @@ class TestGraphTraversal(unittest.TestCase):
             graph.adjacency(self.g, heuristic=lambda id1, id2: 0.1),
         ]
         for i in range(len(a)):
-            a[i] = sorted((id1, sorted((id2, round(w,2)) for id2, w in p.items())) for id1, p in a[i].items())
+            a[i] = sorted((id1, sorted((id2, round(w,2)) for id2, w in list(p.items()))) for id1, p in list(a[i].items()))
         self.assertEqual(a[0], [
             ("a", [("b", 0.75), ("c", 1.0)]), 
             ("b", [("a", 0.75), ("d", 1.0)]), 
@@ -542,7 +542,7 @@ class TestGraphTraversal(unittest.TestCase):
     def test_floyd_warshall_all_pairs_distance(self):
         # Assert all pairs path distance.
         p1 = graph.floyd_warshall_all_pairs_distance(self.g)
-        p2 = sorted((id1, sorted((id2, round(w,2)) for id2, w in p.items())) for id1, p in p1.items())
+        p2 = sorted((id1, sorted((id2, round(w,2)) for id2, w in list(p.items()))) for id1, p in list(p1.items()))
         self.assertEqual(p2, [
             ("a", [("a", 0.00), ("b", 0.75), ("c", 1.00), ("d", 1.75), ("e", 2.75)]), 
             ("b", [("a", 0.75), ("b", 0.00), ("c", 1.75), ("d", 1.00), ("e", 2.00)]), 

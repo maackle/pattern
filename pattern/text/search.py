@@ -148,7 +148,7 @@ def product(*args, **kwargs):
          ("t", "t")]
     """
     p = [[]]
-    for iterable in map(tuple, args) * kwargs.get("repeat", 1):
+    for iterable in list(map(tuple, args)) * kwargs.get("repeat", 1):
         p = [x + [y] for x in p for y in iterable]
     for p in p:
         yield tuple(p)
@@ -193,7 +193,7 @@ class odict(dict):
         dict.__init__(self)
         self._o = [] # List of ordered keys.
         if isinstance(items, dict):
-            items = reversed(items.items())
+            items = reversed(list(items.items()))
         for k, v in items:
             self.__setitem__(k, v)
         
@@ -223,7 +223,7 @@ class odict(dict):
         dict.__delitem__(self, k)
 
     def update(self, d):
-        for k, v in reversed(d.items()): 
+        for k, v in reversed(list(d.items())): 
             self.__setitem__(k, v)
         
     def setdefault(self, k, v=None):
@@ -245,22 +245,22 @@ class odict(dict):
     def iterkeys(self):
         return reversed(self._o)
     def itervalues(self):
-        return itertools.imap(self.__getitem__, reversed(self._o))
+        return map(self.__getitem__, reversed(self._o))
     def iteritems(self):
-        return iter(zip(self.iterkeys(), self.itervalues()))
+        return iter(zip(iter(self.keys()), iter(self.values())))
 
     def keys(self): 
-        return list(self.iterkeys())
+        return list(self.keys())
     def values(self):
-        return list(self.itervalues())
+        return list(self.values())
     def items(self): 
-        return list(self.iteritems())
+        return list(self.items())
     
     def copy(self):
-        return self.__class__(reversed(self.items()))
+        return self.__class__(reversed(list(self.items())))
     
     def __repr__(self):
-        return "{%s}" % ", ".join("%s: %s" % (repr(k), repr(v)) for k, v in self.items())
+        return "{%s}" % ", ".join("%s: %s" % (repr(k), repr(v)) for k, v in list(self.items()))
 
 #--- TAXONOMY --------------------------------------------------------------------------------------
 
@@ -315,7 +315,7 @@ class Taxonomy(dict):
         """
         term = self._normalize(term)
         if dict.__contains__(self, term):
-            return self[term][0].keys()[-1]
+            return list(self[term][0].keys())[-1]
         # If the term is not in the dictionary, check the classifiers.
         # Returns the first term in the list returned by a classifier.
         for classifier in self.classifiers:
@@ -334,7 +334,7 @@ class Taxonomy(dict):
                 return []
             visited[term], a = True, []
             if dict.__contains__(self, term):
-                a = self[term][0].keys()
+                a = list(self[term][0].keys())
             for classifier in self.classifiers:
                 a.extend(classifier.parents(term, **kwargs) or [])
             if recursive:
@@ -351,7 +351,7 @@ class Taxonomy(dict):
                 return []
             visited[term], a = True, []
             if dict.__contains__(self, term):
-                a = self[term][1].keys()
+                a = list(self[term][1].keys())
             for classifier in self.classifiers:
                 a.extend(classifier.children(term, **kwargs) or [])
             if recursive:
@@ -414,7 +414,7 @@ class WordNetClassifier(Classifier):
         if wordnet is None:
             try: from pattern.en import wordnet
             except:
-                try: from en import wordnet
+                try: from .en import wordnet
                 except:
                     pass
         Classifier.__init__(self, self._parents, self._children)
@@ -786,7 +786,7 @@ class Pattern(object):
             pass
         elif isinstance(sentence, list) or sentence.__class__.__name__ == "Text":
             a=[]; [a.extend(self.search(s)) for s in sentence]; return a
-        elif isinstance(sentence, basestring):
+        elif isinstance(sentence, str):
             sentence = Sentence(sentence)
         elif isinstance(sentence, Match) and len(sentence) > 0:
             sentence = sentence[0].sentence.slice(sentence[0].index, sentence[-1].index + 1)
@@ -806,7 +806,7 @@ class Pattern(object):
             pass
         elif isinstance(sentence, list) or sentence.__class__.__name__ == "Text":
             return find(lambda m: m is not None, (self.match(s, start, _v) for s in sentence))
-        elif isinstance(sentence, basestring):
+        elif isinstance(sentence, str):
             sentence = Sentence(sentence)
         elif isinstance(sentence, Match) and len(sentence) > 0:
             sentence = sentence[0].sentence.slice(sentence[0].index, sentence[-1].index + 1)
@@ -926,7 +926,7 @@ def compile(pattern, *args, **kwargs):
     id, p = repr(pattern) + repr(args), pattern
     if id in _cache and not kwargs:
         return _cache[id]
-    if isinstance(pattern, basestring):
+    if isinstance(pattern, str):
         p = Pattern.fromstring(pattern, *args, **kwargs)
     if isinstance(pattern, regexp):
         p = Pattern([Constraint(words=[pattern], taxonomy=kwargs.get("taxonomy", TAXONOMY))], *args, **kwargs)
@@ -977,9 +977,9 @@ class Match(object):
         self._map2 = dict() # Constraint index to list of Word indices.
         for w in self.words:
             self._map1[w.index] = map[w.index]
-        for k,v in self._map1.items():
+        for k,v in list(self._map1.items()):
             self._map2.setdefault(self.pattern.sequence.index(v),[]).append(k)
-        for k,v in self._map2.items():
+        for k,v in list(self._map2.items()):
             v.sort()
 
     def __len__(self):

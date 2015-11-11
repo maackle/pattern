@@ -90,7 +90,7 @@ def wotan2penntreebank(token, tag):
     """ Converts a WOTAN tag to a Penn Treebank II tag.
         For example: bokkenrijders/N(soort,mv,neut) => bokkenrijders/NNS
     """
-    for k, v in wotan.items():
+    for k, v in list(wotan.items()):
         if tag.startswith(k):
             for a, b in v:
                 if a in tag: 
